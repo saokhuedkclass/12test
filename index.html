@@ -7,7 +7,7 @@
     <style>
         /* --- PHẦN GIAO DIỆN (CSS) --- */
         :root {
-            --primary-color: #4CAF50; /* Màu xanh chủ đạo */
+            --primary-color: #4CAF50;
             --bg-color: #f4f4f9;
         }
         body {
@@ -27,7 +27,6 @@
         }
         h1 { text-align: center; color: var(--primary-color); }
         
-        /* Form thông tin học sinh */
         .info-box {
             background: #e8f5e9;
             padding: 15px;
@@ -42,10 +41,9 @@
             margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* Để padding không làm vỡ khung */
+            box-sizing: border-box;
         }
 
-        /* Câu hỏi */
         .question {
             margin-bottom: 20px;
             padding-bottom: 15px;
@@ -61,7 +59,6 @@
         }
         .options label:hover { background-color: #f0f0f0; }
 
-        /* Nút nộp bài */
         button#submit-btn {
             width: 100%;
             padding: 15px;
@@ -76,29 +73,26 @@
         button#submit-btn:hover { background-color: #45a049; }
         button#submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        /* Thông báo kết quả */
         #notification {
             margin-top: 20px;
             padding: 15px;
             text-align: center;
             font-weight: bold;
-            display: none; /* Ẩn mặc định */
+            display: none;
             border-radius: 5px;
         }
         .success { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
         .error { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
-
     </style>
-
-    <script>
-      MathJax = {
-        tex: {
-              inlineMath: [['$', '$'], ['\\(', '\\)']] 
-            }
-      };
-    </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     
+    <script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']] 
+        }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
 
@@ -128,10 +122,99 @@
         <div class="question">
             <p>Câu 2: They ______ football yesterday.</p>
             <div class="options">
-
-                <label><input type="radio" name="
+                <label><input type="radio" name="q2" value="A"> A. play</label>
+                <label><input type="radio" name="q2" value="B"> B. plays</label>
+                <label><input type="radio" name="q2" value="C"> C. played</label>
+                <label><input type="radio" name="q2" value="D"> D. playing</label>
+            </div>
+        </div>
+        
         <div class="question">
-            <p>Câu 3: Cho hàm số $y=x^2$.</p>
+            <p>Câu 3: Cho hàm số $y=x^2 + 2x - 3$. Tìm giá trị nhỏ nhất của hàm số.</p>
             <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $-4$</label>
+                <label><input type="radio" name="q3" value="B"> B. $-3$</label>
+                <label><input type="radio" name="q3" value="C"> C. $0$</label>
+                <label><input type="radio" name="q3" value="D"> D. $1$</label>
+            </div>
+        </div>
 
-                <label><input type="radio" name="
+    </form>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    
+    <div id="notification"></div>
+</div>
+
+<script>
+    // --- CẤU HÌNH ---
+    // 👇👇👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO DƯỚI ĐÂY 👇👇👇
+    const googleScriptURL = 'HÃY_DÁN_LINK_WEB_APP_CỦA_BẠN_VÀO_ĐÂY';
+
+    // 👇👇👇 ĐÁP ÁN ĐÚNG Ở ĐÂY (Bạn đang tìm đoạn này đúng không?) 👇👇👇
+    const correctAnswers = {
+        q1: "B", // goes
+        q2: "C", // played
+        q3: "A"  // -4
+    };
+
+    // --- HÀM XỬ LÝ NỘP BÀI ---
+    function submitTest() {
+        const fullName = document.getElementById("fullname").value.trim();
+        const className = document.getElementById("class_name").value.trim();
+        const btn = document.getElementById("submit-btn");
+        const notif = document.getElementById("notification");
+
+        if (!fullName || !className) {
+            alert("Vui lòng nhập đầy đủ Họ Tên và Lớp!");
+            return;
+        }
+
+        if (googleScriptURL.includes("HÃY_DÁN_LINK")) {
+            alert("Lỗi: Giáo viên chưa cấu hình đường dẫn Google Sheet!");
+            return;
+        }
+
+        let score = 0;
+        let totalQuestions = Object.keys(correctAnswers).length;
+        
+        for (let key in correctAnswers) {
+            let userOption = document.querySelector(`input[name="${key}"]:checked`);
+            if (userOption && userOption.value === correctAnswers[key]) {
+                score++;
+            }
+        }
+        
+        let finalScore = `${score}/${totalQuestions}`;
+
+        btn.disabled = true;
+        btn.innerText = "Đang chấm và nộp bài...";
+        notif.style.display = "none";
+
+        const formData = new FormData();
+        formData.append("Họ và Tên", fullName);
+        formData.append("Lớp", className);
+        formData.append("Điểm số", finalScore);
+
+        fetch(googleScriptURL, { method: 'POST', body: formData })
+            .then(response => {
+                notif.className = "success";
+                notif.innerHTML = `✅ Nộp bài thành công!<br>Bạn đạt: <b>${finalScore}</b> điểm.`;
+                notif.style.display = "block";
+                btn.innerText = "ĐÃ NỘP XONG";
+                let inputs = document.querySelectorAll('input');
+                inputs.forEach(input => input.disabled = true);
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                notif.className = "error";
+                notif.innerText = "⚠️ Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.";
+                notif.style.display = "block";
+                btn.disabled = false;
+                btn.innerText = "NỘP BÀI";
+            });
+    }
+</script>
+
+</body>
+</html>
