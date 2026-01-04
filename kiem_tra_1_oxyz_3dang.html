@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Kiểm Tra Oxyz - Thầy Trần Trọng Trị</title>
+    <script>
+      window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root { --bg: #0d1117; --card: #161b22; --accent: #58a6ff; --text: #c9d1d9; --correct: #238636; --wrong: #da3633; --gold: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent); width: 100%; padding-bottom: 15px; }
+        
+        #nameModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .name-box { background: var(--card); padding: 40px; border-radius: 15px; text-align: center; border: 2px solid var(--accent); }
+        .name-input { padding: 12px; width: 280px; font-size: 1.1rem; border-radius: 6px; border: 1px solid var(--accent); margin-bottom: 20px; background: #0d1117; color: white; }
+        
+        .game-container { max-width: 1050px; width: 100%; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        @media (max-width: 850px) { .game-container { grid-template-columns: 1fr; } }
+        
+        .quiz-card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #30363d; min-height: 550px; display: flex; flex-direction: column; }
+        .round-indicator { color: var(--gold); font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: block; font-size: 1.2rem; }
+        .question-text { font-size: 1.15rem; margin-bottom: 25px; line-height: 1.6; min-height: 80px; }
+        
+        .options-grid { display: grid; gap: 10px; flex-grow: 1; }
+        .btn { background: #21262d; border: 1px solid #30363d; color: var(--text); padding: 12px 20px; border-radius: 8px; cursor: pointer; text-align: left; transition: 0.3s; }
+        .btn.correct { background: var(--correct) !important; border-color: #fff; }
+        .btn.wrong { background: var(--wrong) !important; border-color: #fff; }
+        
+        .tf-row { display: flex; align-items: center; justify-content: space-between; background: #0d1117; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #30363d; }
+        .btn-tf { padding: 8px 15px; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; background: #21262d; color: #fff; font-weight: bold; }
+        .btn-tf.active-t { background: var(--correct); }
+        .btn-tf.active-f { background: var(--wrong); }
+
+        .short-answer-zone { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .answer-display { background: #000; color: var(--accent); font-size: 2.2rem; padding: 15px; border-radius: 10px; border: 2px solid var(--accent); min-width: 200px; text-align: center; height: 60px; display: flex; align-items: center; justify-content: center; font-family: monospace; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .num-btn { background: #30363d; border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; }
+
+        .image-box { position: relative; width: 350px; height: 260px; border: 4px solid var(--card); border-radius: 12px; overflow: hidden; margin: 0 auto; background: #000; }
+        .grid-overlay { position: absolute; top:0; left:0; width: 100%; height: 100%; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); }
+        .tile { background: #2c3e50; border: 1px solid var(--bg); transition: 0.8s; }
+        .tile.open { opacity: 0; transform: scale(0.2) rotate(15deg); }
+        
+        .status { margin-top: 20px; background: var(--card); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #30363d; }
+        .next-btn { margin-top: 25px; width: 100%; padding: 15px; background: var(--gold); color: #000; border: none; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; font-size: 1.1rem; }
+        
+        .result-text { font-size: 1.5rem; font-weight: bold; margin: 15px 0; }
+        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 40% { color: var(--accent); text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .5em 0 0 var(--accent), 1em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .5em 0 0 var(--accent), 1em 0 0 var(--accent); } }
+    </style>
+</head>
+<body>
+
+<div id="nameModal">
+    <div class="name-box">
+        <h2 style="color:var(--gold); margin-top:0;">CHÀO MỪNG CÁC EM</h2>
+        <p>Vui lòng nhập Họ và Tên để bắt đầu bài kiểm tra:</p>
+        <input type="text" id="studentName" class="name-input" placeholder="Ví dụ: Nguyễn Văn A">
+        <br>
+        <button class="btn" style="text-align:center; width:100%; background:var(--accent); color:white; font-weight:bold;" onclick="startGame()">BẮT ĐẦU NGAY</button>
+    </div>
+</div>
+
+<header>
+    <h1 style="margin:5px 0; color:var(--gold);">GIẢI MÃ HÌNH HỌC OXYZ</h1>
+    <p style="margin:5px 0; font-weight:bold;">ThS. Trần Trọng Trị - GV Chuyên Toán Trường THPT Gia Định</p>
+</header>
+
+<div class="game-container">
+    <div class="quiz-card">
+        <span id="round-title" class="round-indicator">VÒNG 1</span>
+        <div id="q-area">
+            <div id="q-text" class="question-text"></div>
+            <div id="ans-zone" class="options-grid"></div>
+        </div>
+        <button id="next-btn" class="next-btn" onclick="handleNext()">TIẾP THEO ➜</button>
+    </div>
+
+    <div class="sidebar">
+        <div class="image-box">
+            <img src="hinh_game.jpg" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://via.placeholder.com/350x260?text=Oxyz+Challenge'">
+            <div id="grid" class="grid-overlay"></div>
+        </div>
+        <div class="status">
+            <div style="font-size: 1.6rem; color: var(--gold); font-weight: bold;">ĐIỂM: <span id="score">0.00</span></div>
+            <div id="student-display" style="color:var(--accent); font-weight:bold; margin: 10px 0;">Học sinh: ...</div>
+            <div style="color: #8b949e; border-top: 1px solid #30363d; padding-top: 10px;">Tiến trình: <span id="q-num">1</span> / 22</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyu-MpFNTly4cIhVq0cv2YclWmyLtxjQllhss1LzBr2p3vtC02F83Suhh9rUdIoNBzRww/exec";
+
+    let studentName = "";
+    let currentIdx = 0, score = 0, userAns = "", v2Ans = [];
+
+    const questions = [
+        // Vòng 1 (12 câu - 0.25đ/câu)
+        { type: 'v1', q: "Trong $Oxyz$, mặt cầu $x^2+y^2+z^2-2x+4y-6z-2=0$ có bán kính là:", a: ["$R=4$", "$R=\\sqrt{12}$", "$R=16$", "$R=2$"], c: 0 },
+        { type: 'v1', q: "Mặt phẳng qua $M(1;2;-3)$ và vuông góc trục $Oz$ có PT:", a: ["$z+3=0$", "$x-1=0$", "$y-2=0$", "$z-3=0$"], c: 0 },
+        { type: 'v1', q: "Khoảng cách từ $A(1;2;3)$ đến $(P): 2x-2y+z+3=0$ bằng:", a: ["$2/3$", "$4/3$", "$2$", "$4/9$"], c: 1 },
+        { type: 'v1', q: "VTCP của $d: \\frac{x-1}{2} = \\frac{y}{1} = \\frac{z+2}{-2}$ là:", a: ["$(1;0;-2)$", "$(2;1;2)$", "$(2;1;-2)$", "$(-2;-1;2)$"], c: 2 },
+        { type: 'v1', q: "Góc giữa $(P): x+y-z+1=0$ và $(Q): x-y+z-5=0$ là:", a: ["$30^\\circ$", "$60^\\circ$", "$90^\\circ$", "$\\arccos(1/3)$"], c: 3 },
+        { type: 'v1', q: "Hình chiếu của $A(1;0;1)$ lên $x+y+z-1=0$ là:", a: ["$(2/3; -1/3; 2/3)$", "$(1/3; 1/3; 1/3)$", "$(1;1;-1)$", "$(0;0;0)$"], c: 0 },
+        { type: 'v1', q: "Tâm cầu qua $O, A(1,0,0), B(0,1,0), C(0,0,1)$ là:", a: ["$(1,1,1)$", "$(1/2,1/2,1/2)$", "$(0,0,0)$", "$(1/4,1/4,1/4)$"], c: 1 },
+        { type: 'v1', q: "Khoảng cách giữa $x+2y-2z+3=0$ và $x+2y-2z-1=0$ là:", a: ["$4/3$", "$2/3$", "$4$", "$1$"], c: 0 },
+        { type: 'v1', q: "Vị trí của $d: \\frac{x}{1}=\\frac{y}{1}=\\frac{z}{1}$ và $d': \\frac{x-1}{1}=\\frac{y-1}{1}=\\frac{z-1}{1}$ là:", a: ["Trùng nhau", "Song song", "Cắt nhau", "Chéo nhau"], c: 0 },
+        { type: 'v1', q: "Mặt phẳng tiếp xúc cầu $(x-1)^2+y^2+z^2=1$ tại $A(2,0,0)$ là:", a: ["$x-2=0$", "$x+2=0$", "$y=0$", "$z=0$"], c: 0 },
+        { type: 'v1', q: "Diện tích tam giác $OAB$ với $A(1,0,0), B(0,2,0)$ là:", a: ["$1$", "$2$", "$0.5$", "$4$"], c: 0 },
+        { type: 'v1', q: "Điểm đối xứng của $M(1;1;1)$ qua mặt phẳng $Oxy$ là:", a: ["$(1,1,-1)$", "$(-1;-1;1)$", "$(1;-1;1)$", "$(-1;1;1)$"], c: 0 },
+        
+        // Vòng 2 (4 câu - 0.1, 0.25, 0.5, 1.0)
+        { type: 'v2', q: "Cho $d: \\frac{x-1}{2} = \\frac{y}{1} = \\frac{z+2}{-2}$ và $(P): x+y+z-3=0$:", items: [
+            { l: "VTCP của $d$ là $\\vec{u}(2;1;-2)$", r: true },
+            { l: "$d$ song song $(P)$", r: false },
+            { l: "Giao điểm là $M(3;1;-4)$", r: true },
+            { l: "$d(O, d) = 2\\sqrt{2}$", r: false }
+        ]},
+        { type: 'v2', q: "Cho mặt cầu $(S): (x-1)^2 + y^2 + (z+2)^2 = 9$:", items: [
+            { l: "Tâm $I(1; 0; -2)$", r: true },
+            { l: "Bán kính $R=9$", r: false },
+            { l: "$O(0;0;0)$ nằm ngoài cầu", r: false },
+            { l: "$(Oxy)$ cắt $(S)$ theo đường tròn", r: true }
+        ]},
+        { type: 'v2', q: "Cho $(P): x+2y-z+1=0$ và $(Q): 2x+4y-2z+5=0$:", items: [
+            { l: "VTPT của $(P)$ là $(1;2;-1)$", r: true },
+            { l: "$(P)$ cắt $(Q)$", r: false },
+            { l: "$d((P), (Q)) = \\frac{3}{2\\sqrt{6}}$", r: true },
+            { l: "$M(-1;0;0) \\in (P) \\cap (Q)$", r: false }
+        ]},
+        { type: 'v2', q: "Cho $A(1;0;0), B(0;2;0), C(0;0;3)$:", items: [
+            { l: "PT mặt phẳng $(ABC)$ là $\\frac{x}{1} + \\frac{y}{2} + \\frac{z}{3} = 1$", r: true },
+            { l: "VTPT là $\\vec{n}=(6;3;2)$", r: true },
+            { l: "$V_{OABC} = 1$", r: true },
+            { l: "$O$ cách đều $A, B, C$", r: false }
+        ]},
+
+        // Vòng 3 (6 câu - 0.5đ/câu)
+        { type: 'v3', q: "Tính cao độ trung điểm $I$ của $AB$ với $A(1,2,1), B(3,4,3)$.", c: "2" },
+        { type: 'v3', q: "Tính khoảng cách từ điểm $M(1,2,3)$ đến trục $Oz$.", c: "2.24" },
+        { type: 'v3', q: "Cho mặt cầu $x^2+y^2+z^2=4$. Tính bán kính $R$.", c: "2" },
+        { type: 'v3', q: "Hoành độ giao điểm của $d: x=t, y=1, z=1$ và $(P): x+y+z-5=0$ là:", c: "3" },
+        { type: 'v3', q: "Tính $d(O, (P))$ với $(P): x+y+z-3=0$ (làm tròn 2 chữ số thập phân):", c: "1.73" },
+        { type: 'v3', q: "Tính độ dài vectơ $\\vec{a}=(1;2;2)$.", c: "3" }
+    ];
+
+    function startGame() {
+        const input = document.getElementById('studentName').value;
+        if(input.trim() === "") { alert("Vui lòng nhập họ tên trước khi thi!"); return; }
+        studentName = input;
+        document.getElementById('nameModal').style.display = 'none';
+        document.getElementById('student-display').innerText = "Học sinh: " + studentName;
+        resetGame();
+    }
+
+    function resetGame() {
+        currentIdx = 0; score = 0;
+        document.getElementById('score').innerText = "0.00";
+        const grid = document.getElementById('grid'); grid.innerHTML = "";
+        for(let i=0; i<24; i++) {
+            let t = document.createElement('div'); t.className='tile'; t.id='tile-'+i; grid.appendChild(t);
+        }
+        render();
+    }
+
+    function render() {
+        const q = questions[currentIdx];
+        document.getElementById('q-num').innerText = currentIdx + 1;
+        document.getElementById('q-text').innerHTML = q.q;
+        const zone = document.getElementById('ans-zone'), nextBtn = document.getElementById('next-btn');
+        zone.innerHTML = ''; nextBtn.style.display = 'none';
+
+        if(q.type === 'v1') {
+            document.getElementById('round-title').innerText = "Vòng 1: Trắc nghiệm (0.25đ/câu)";
+            q.a.forEach((opt, i) => {
+                let b = document.createElement('button'); b.className='btn'; b.innerHTML = opt;
+                b.onclick = () => {
+                    if(i === q.c) { b.classList.add('correct'); score += 0.25; openTile(); }
+                    else { b.classList.add('wrong'); document.querySelectorAll('.btn')[q.c].classList.add('correct'); }
+                    document.querySelectorAll('.btn').forEach(btn => btn.disabled = true);
+                    nextBtn.style.display = 'block'; updateScore();
+                };
+                zone.appendChild(b);
+            });
+        } else if(q.type === 'v2') {
+            document.getElementById('round-title').innerText = "Vòng 2: Đúng/Sai (Tối đa 1.0đ/câu)";
+            v2Ans = new Array(4).fill(null);
+            q.items.forEach((item, i) => {
+                let div = document.createElement('div'); div.className='tf-row';
+                div.innerHTML = `<div style="flex:1; padding-right:10px;">${item.l}</div><div style="display:flex; gap:8px;">
+                    <button class="btn-tf" id="t-${i}" onclick="setV2(${i},true)">Đúng</button>
+                    <button class="btn-tf" id="f-${i}" onclick="setV2(${i},false)">Sai</button>
+                </div>`;
+                zone.appendChild(div);
+            });
+            nextBtn.style.display = 'block'; nextBtn.innerText = "XÁC NHẬN CÂU NÀY";
+        } else {
+            document.getElementById('round-title').innerText = "Vòng 3: Trả lời ngắn (0.5đ/câu)";
+            userAns = "";
+            zone.innerHTML = `<div class="short-answer-zone"><div class="answer-display" id="disp">- - -</div>
+                <div class="numpad">${[1,2,3,4,5,6,7,8,9,0,'.','-'].map(n=>`<button class="num-btn" onclick="press('${n}')">${n}</button>`).join('')}
+                <button class="num-btn" style="grid-column:span 3; background:var(--wrong); border:none;" onclick="press('C')">XÓA TẤT CẢ</button></div></div>`;
+            nextBtn.style.display = 'block'; nextBtn.innerText = "GỬI ĐÁP ÁN";
+        }
+        MathJax.typesetPromise();
+    }
+
+    function setV2(i, v) { 
+        v2Ans[i] = v;
+        document.getElementById(`t-${i}`).className = v ? 'btn-tf active-t' : 'btn-tf';
+        document.getElementById(`f-${i}`).className = !v ? 'btn-tf active-f' : 'btn-tf';
+    }
+
+    function press(v) { 
+        if(v === 'C') userAns = ""; else if(userAns.length < 6) userAns += v;
+        document.getElementById('disp').innerText = userAns || "- - -";
+    }
+
+    function openTile() { 
+        const tiles = document.querySelectorAll('.tile:not(.open)');
+        if(tiles.length) tiles[Math.floor(Math.random()*tiles.length)].classList.add('open');
+    }
+
+    function updateScore() { document.getElementById('score').innerText = score.toFixed(2); }
+
+    function handleNext() {
+        const q = questions[currentIdx];
+        if(q.type === 'v2') {
+            let correctCount = 0; 
+            q.items.forEach((item, i) => { if(v2Ans[i] === item.r) correctCount++; });
+            const pointsMap = [0, 0.1, 0.25, 0.5, 1.0];
+            score += pointsMap[correctCount];
+            if(correctCount === 4) openTile();
+        } else if(q.type === 'v3') {
+            if(userAns == q.c) { score += 0.5; openTile(); }
+        }
+        updateScore(); 
+        currentIdx++;
+        if(currentIdx < questions.length) render();
+        else finish();
+    }
+
+    function finish() {
+        let comment = "";
+        const s = score;
+        if (s <= 3.5) comment = "Bạn cần cố gắng nhiều.";
+        else if (s <= 5) comment = "Bạn cần cố gắng.";
+        else if (s <= 6.5) comment = "Bạn ở mức tầm trung.";
+        else if (s < 8) comment = "Bạn khá.";
+        else if (s <= 9) comment = "Bạn giỏi.";
+        else if (s <= 9.8) comment = "Bạn xuất sắc.";
+        else comment = "Đỉnh của chóp...";
+
+        document.getElementById('round-title').innerText = "KẾT THÚC BÀI THI";
+        document.getElementById('q-area').innerHTML = `<div style="text-align:center;">
+            <div class="result-text" id="result-comment">${comment}</div>
+            <h3>Tổng điểm tích lũy: ${score.toFixed(2)} / 10.0</h3>
+            <p id="upload-status" class="loading-dots">Đang lưu kết quả lên hệ thống</p>
+            <button class="btn" style="width:100%; text-align:center; margin-top:20px;" onclick="location.reload()">LÀM LẠI BÀI KHÁC</button>
+        </div>`;
+        document.querySelectorAll('.tile').forEach(t => t.classList.add('open'));
+        
+        sendToSheet(studentName, score.toFixed(2));
+    }
+
+    function sendToSheet(name, finalScore) {
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: name, score: finalScore })
+        }).then(() => {
+            document.getElementById('upload-status').innerText = "✅ Đã lưu điểm thành công vào hệ thống!";
+            document.getElementById('upload-status').classList.remove('loading-dots');
+        }).catch(err => {
+            document.getElementById('upload-status').innerText = "❌ Lỗi kết nối, hãy chụp màn hình điểm lại nhé.";
+        });
+    }
+</script>
+</body>
+</html>
