@@ -83,6 +83,32 @@
         }
         .success { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
         .error { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+    
+                /* --- ĐỒNG HỒ ĐẾM NGƯỢC --- */
+        #timer-box {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background-color: #ff5722; /* Màu cam nổi bật */
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 18px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 1000; /* Luôn nổi lên trên cùng */
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        }
+    #timer-box.warning {
+    background-color: #d32f2f; /* Chuyển màu đỏ khi sắp hết giờ */
+    animation: blink 1s infinite; /* Nhấp nháy */
+        }
+    @keyframes blink {
+    50% { opacity: 0.7; }
+    }
+    
     </style>
     
     <script>
@@ -95,7 +121,11 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
-
+    <div id="timer-box">
+    <span>⏱️ Thời gian: </span>
+    <span id="countdown">15:00</span>
+    </div>
+    
 <div class="container">
     <h1>📝 BÀI KIỂM TRA TIẾNG ANH</h1>
     
@@ -158,6 +188,64 @@
         q3: "A"  // -4
     };
 
+
+
+
+    // --- CẤU HÌNH THỜI GIAN ---
+    const TIME_LIMIT = 15; // Phút (Bạn chỉnh sửa số phút tại đây)
+    let timeInSeconds = TIME_LIMIT * 60;
+    let timerInterval;
+
+    // Tự động chạy đồng hồ khi tải trang
+    window.onload = function() {
+        startTimer();
+    };
+
+    function startTimer() {
+        const display = document.getElementById('countdown');
+        const timerBox = document.getElementById('timer-box');
+
+        timerInterval = setInterval(() => {
+            let minutes = Math.floor(timeInSeconds / 60);
+            let seconds = timeInSeconds % 60;
+
+            // Thêm số 0 đằng trước nếu nhỏ hơn 10 (ví dụ: 09, 05)
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            // Hiệu ứng khi còn dưới 1 phút (đổi màu đỏ nhấp nháy)
+            if (timeInSeconds < 60) {
+                timerBox.classList.add("warning");
+            }
+
+            // HẾT GIỜ
+            if (--timeInSeconds < 0) {
+                clearInterval(timerInterval);
+                handleTimeOut(); // Gọi hàm xử lý hết giờ
+            }
+        }, 1000);
+    }
+
+    function handleTimeOut() {
+        alert("⏰ ĐÃ HẾT GIỜ LÀM BÀI! Hệ thống sẽ tự động nộp bài của bạn.");
+        
+        // Xử lý trường hợp học sinh chưa nhập tên mà hết giờ
+        // Nếu không điền cái này, hàm submitTest cũ sẽ chặn không cho nộp
+        let nameInput = document.getElementById("fullname");
+        let classInput = document.getElementById("class_name");
+        
+        if (!nameInput.value.trim()) {
+            nameInput.value = "Hết giờ (Chưa điền tên)";
+        }
+        if (!classInput.value.trim()) {
+            classInput.value = "Không rõ";
+        }
+
+        // Gọi hàm nộp bài có sẵn
+        submitTest();
+    }
     // --- HÀM XỬ LÝ NỘP BÀI ---
     function submitTest() {
         const fullName = document.getElementById("fullname").value.trim();
@@ -218,4 +306,5 @@
 
 </body>
 </html>
+
 
