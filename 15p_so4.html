@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Kiểm Tra Tiếng Anh</title>
+    <style>
+        /* --- CSS GIAO DIỆN --- */
+        :root { --primary-color: #4CAF50; --bg-color: #f4f4f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary-color); }
+        h3.part-title { background: #e8f5e9; padding: 10px; border-left: 5px solid var(--primary-color); margin-top: 30px; }
+
+        /* Form thông tin */
+        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9; }
+        .info-box label { font-weight: bold; display: block; margin-top: 10px; }
+        .info-box input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* Câu hỏi trắc nghiệm thường */
+        .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+        .question p { font-weight: bold; font-size: 1.1em; }
+        .options label { display: block; margin-bottom: 8px; cursor: pointer; padding: 5px; border-radius: 4px; }
+        .options label:hover { background-color: #f0f0f0; }
+
+        /* --- CSS CHO PHẦN ĐÚNG/SAI --- */
+        .tf-container { margin-top: 10px; }
+        .tf-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .tf-content { flex: 1; padding-right: 10px; }
+        .tf-options { display: flex; gap: 15px; min-width: 100px; }
+        .tf-options label { font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .tf-row:hover { background-color: #f9f9f9; }
+
+        /* --- CSS CHO PHẦN TRẢ LỜI NGẮN --- */
+        .sa-input { width: 100%; padding: 10px; border: 1px solid #aaa; border-radius: 5px; font-size: 16px; margin-top: 10px; box-sizing: border-box; }
+        .sa-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(76, 175, 80, 0.3); }
+
+        /* Nút nộp bài */
+        button#submit-btn { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; font-size: 18px; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; margin-top: 20px; }
+        button#submit-btn:hover { background-color: #45a049; }
+        button#submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Thông báo */
+        #notification { margin-top: 20px; padding: 15px; text-align: center; font-weight: bold; display: none; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .error { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+    
+        /* Đồng hồ */
+        #timer-box { position: fixed; top: 10px; right: 10px; background-color: #ff5722; color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        #timer-box.warning { background-color: #d32f2f; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.7; } }
+    </style>
+    
+    <script> MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } }; </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+    <div id="timer-box"><span>⏱️</span><span id="countdown">30:00</span></div>
+    
+<div class="container">
+    <h1>📝 THI THỬ CỬA LÒ LẦN 1 21.1.2026</h1>
+    
+    <div class="info-box">
+        <label>Họ và Tên:</label>
+        <input type="text" id="fullname" placeholder="Nhập họ tên đầy đủ..." required>
+        <label>Lớp:</label>
+        <input type="text" id="class_name" placeholder="Ví dụ: 12A1..." required>
+    </div>
+
+    <form id="quiz-form">
+        <h3 class="part-title">PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN</h3>
+        <p><i>(Mỗi câu đúng được 0.25 điểm)</i></p>
+        
+        <div class="question">
+            <p>Câu 1: Nghiệm của phương trình $log_2(x+1)=3$ là</p>
+            <div class="options">
+                <label><input type="radio" name="q1" value="A"> A. x=7</label>
+                <label><input type="radio" name="q1" value="B"> B. x=9</label>
+                <label><input type="radio" name="q1" value="C"> C. x=5</label>
+                <label><input type="radio" name="q1" value="D"> D. x=8</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <p>Câu 2: Cho hàm số bậc bốn $y=f(x)$ có đồ thị của đạo hàm $f'(x)$ như hình vẽ</p>
+			<img src="images/cau2.PNG" alt="Ảnh gốc" width="300">
+            <div class="options">
+                <label><input type="radio" name="q2" value="A"> A. 2</label>
+                <label><input type="radio" name="q2" value="B"> B. 1</label>
+                <label><input type="radio" name="q2" value="C"> C. 3</label>
+                <label><input type="radio" name="q2" value="D"> D. 0</label>
+            </div>
+        </div>
+        
+        <div class="question">
+            <p>Câu 3: Cho khối chóp S.ABC có $SA \perp (ABC)$, SA=3, tam giác ABC vuông cân tại a.
+					  Thể tích khối chóp S.ABC là	</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $8$</label>
+                <label><input type="radio" name="q3" value="B"> B. $24$</label>
+                <label><input type="radio" name="q3" value="C"> C. $16$</label>
+                <label><input type="radio" name="q3" value="D"> D. $48$</label>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 4: Cho hình chóp S.ABCD có đáy là hình vuông ABCD cạnh bằng a, các cạnh bên đều bằng a. 
+					  Số đo góc giữa hai đường thẳng SA và SC bằng</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $45^o$</label>
+                <label><input type="radio" name="q3" value="B"> B. $60^o$</label>
+                <label><input type="radio" name="q3" value="C"> C. $90^o$</label>
+                <label><input type="radio" name="q3" value="D"> D. $30^o$</label>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 5: Cho A và B là hai biến cố độc lập. Biết P(A)=0,3 và P(B)=0,5. Xác suất của biến cố $\bar{A}B$</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $0,35$</label>
+                <label><input type="radio" name="q3" value="B"> B. $0,25$</label>
+                <label><input type="radio" name="q3" value="C"> C. $0,8$</label>
+                <label><input type="radio" name="q3" value="D"> D. $0,15$</label>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 6: Mỗi ngày bác Nam đi bộ rèn sức khỏe. Quãng đường đi bộ mỗi ngày đơn vị km của bác Nam
+					  trong 20 ngày được thống kê ở bảng sau. Khoảng tứ phân vị là</p>
+			<img src="images/cau6.PNG" alt="Ảnh gốc" width="500">
+            <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $0,35$</label>
+                <label><input type="radio" name="q3" value="B"> B. $0,25$</label>
+                <label><input type="radio" name="q3" value="C"> C. $0,8$</label>
+                <label><input type="radio" name="q3" value="D"> D. $0,15$</label>
+            </div>
+        </div>
+
+        <h3 class="part-title">PHẦN II: TRẮC NGHIỆM ĐÚNG SAI</h3>
+        <p><i>(Chọn đúng/sai. Điểm tính theo số ý đúng trong 1 câu: 0.1 - 0.25 - 0.5 - 1.0)</i></p>
+
+        <div class="question">
+            <p>Câu 7: Đọc kỹ câu sau và chọn True/False.</p>
+            <p><i>"Trong không gian Oxyz, đơn vị trục km. Một tên lửa phóng từ mặt đất từ vị trí gốc tọa độ
+				   , vận tốc không đổi (Oxy) trùng với mặt đất. Tên lửa đi từ O(0;0;0) đến điểm A(140;60;6) trong 8 phút"</i></p>
+            
+            <div class="tf-container">
+                <div class="tf-row">
+                    <div class="tf-content">a) trong 8 phút tên lửa bay được quãng đường làm tròn đến hàng đơn vị 152km.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_1" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_1" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">b) ở phút thứ 4 độ cao tên lửa là 3km.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_2" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_2" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">c) Tọa độ của tên lửa sau 12 phút kể từ lúc phòng là (210; 90;12).</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_3" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_3" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">d) Sau 10 phút tiếp theo kể từ vị trí A tên lửa đạt độ cao 13,5km.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_4" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_4" value="false"> S</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 8: Đọc kỹ câu sau và chọn True/False.</p>
+            <p><i>"Đậu đỏ là loại thực phẩm quen thuộc trong bữa ăn người Việt. Ngoài giá trị dinh dưỡng cao
+			       , đậu đỏ còn có nhiều công dụng tuyệt vời cho sức khỏe và sắc đẹp: chống oxy hóa, giúp cơ bắp khỏe mạnh
+				   , tăng sức khỏe tim mạch, lợi ích cho hệ tiêu hóa, bổ thận, cung cấp vitamin, đào thải độc tố, giải độc
+				   tốt cho hệ miễn dịch, ổn định huyết áp. Cây đậu đỏ khi trồng có chiều cao 6cm. Khảo sát cho thấy độ cao
+				   tính bằng cm của cây đậu đỏ tại thời điểm t kể từ khi được trồng được cho bởi hàm số $h(t)=-0,005t^4+bt^3+c$
+				   , với t tính theo tuần. Giả sử $h'(t)$ là tốc độ tăng chiều cao của cây đậu đỏ sau khi trồng đơn vị cm/tuần
+				   . Biết $h'(5)=5$"</i></p>
+            
+            <div class="tf-container">
+                <div class="tf-row">
+                    <div class="tf-content">a) hàm số h(t) có công thức $h(t)=-0,005t^4 + 0,1t^3$.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_1" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_1" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">b) Giai đoạn tăng trưởng cây đậu đỏ kéo dài 15 tuần.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_2" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_2" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">c) Chiều cao tối đa của cây đậu đỏ là 90cm.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_3" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_3" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">d) Vào thời điểm cây đậu đỏ phát triển nhanh nhất thì chiều cao của cây là 56cm.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_4" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_4" value="false"> S</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 9: Đọc kỹ câu sau và chọn True/False.</p>
+            <p><i>"Cho hàm số $y=f(x)=\dfrac{x^2 +bx+c}{x-2}$ có đạo hàm $f'(x)$. Đồ thị của hàm số $f'(x)$ như hình</i></p>
+            <img src="images/cau9.PNG" alt="Ảnh gốc" width="500">
+			
+            <div class="tf-container">
+                <div class="tf-row">
+                    <div class="tf-content">a) phương trình $f'(x)=0$ có hai nghiệm x = 1 và x = 3.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_1" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_1" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">b) Hàm số $y=f(x)$ nghịch biến trên khoảng (1;3).</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_2" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_2" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">c) Hàm số $y=f(x)$ đạt cực đại tại x=1 và đạt cực tiểu tại x = 3.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_3" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_3" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">d) Nếu $f(0)=1$ thì $\max\limits_{[0;3]}f(x) = 6$.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_4" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_4" value="false"> S</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+		<div class="question">
+            <p>Câu 10: Đọc kỹ câu sau và chọn True/False.</p>
+            <p><i>"Công ty may mặc có hai hệ thống máy chạy song song. Xác suất để hệ thống máy thứ nhất hoạt động tốt là 90%, xác suất để
+			      hệ thống máy của cả hai hệ tốt là 72%. Công ty chỉ có thể hoàn thành đơn đúng hạn nếu ít nhất một trong hai hệ thống máy
+				  hoạt động tốt</i></p>
+            			
+            <div class="tf-container">
+                <div class="tf-row">
+                    <div class="tf-content">a) Xác suất máy 2 hoạt động tốt là 0,8.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_1" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_1" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">b) Xác suất để hệ thống máy thứ nhất không hoạt động tốt là 0,2.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_2" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_2" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">c) Xác suất để cả hai hệ thống hoạt động không tốt là 0,028.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_3" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_3" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">d) Xác suất để công ty hoàn thành đúng hạn là 0,98.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_4" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_4" value="false"> S</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+
+        <h3 class="part-title">PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN</h3>
+        <p><i>(Điền đáp án vào ô trống. Mỗi câu đúng được 0.5 điểm)</i></p>
+
+        <div class="question">
+            <p>Câu 11: Có 9 quả cầu giống hệt nhau được đánh số từ 1 đến 9 và đựng trong một hộp. Sau khi xáo trộn, 
+			           người ta lấy ngẫu nhiên lần lượt 4 quả. Xác suất để lấy được tổng các chữ số ghi trên các quả cầu là 15 bằng bao nhiêu 
+					   (không làm tròn các bước tỉnh trung gian, chỉ làm tròn kết quả cuối cùng đến hàng phần trăm).</p>
+            <input type="text" name="sa_q11" class="sa-input" placeholder="Nhập câu trả lời của bạn...">
+        </div>
+
+        <div class="question">
+            <p>Câu 12: Một doanh nghiệp dự định sản xuất không quá 300 sản phẩm. Nếu doanh nghiệp sản xuất x sản phẩm ($1 \leq x \leq 300$) thì
+			           doanh thu nhận được khi bán hết số sản phẩm đó là $F(x)=-7x^2 + 1700x$ nghìn đồng, trong khi đó chi phí sản suất bình quân
+					   cho một sản phẩm là $G(x)=0,004x^2 - 1,6x + 500 + \dfrac{16000}{x}$ nghìn đồng. Lợi nhuận thu được của doanh nghiệp tính
+					   theo đơn vị triệu đồng) đạt giá trị lớn nhất bao nhiêu.</p>
+            <input type="text" name="sa_q12" class="sa-input" placeholder="Nhập số...">
+        </div>
+		
+		<div class="question">
+            <p>Câu 13: Quanh một đa giác đều 2n cạnh có $n \geq 6, n \in N$ vẽ một vòng tròn ngoại tiếp. Ba đỉnh bất kì của đa giác được gọi là cùng
+			phía nếu tồn tại một nửa đường tròn chứa 3 đỉnh đó. Các đầu mút của nữa đường tròn là các đỉnh của đa giác. Biết xác suất của biến cố
+			"3 đỉnh chọn bất kì cùng phía bằng $\frac{33}{43}$. Tìm n</p>
+            <input type="text" name="sa_q13" class="sa-input" placeholder="Nhập câu trả lời của bạn...">
+        </div>
+		
+		<div class="question">
+            <p>Câu 14: Hệ thống GPRS là một hệ thống cho phép xác định vị trí của một vật thể trong không gian. Trong cùng một thời điểm vị trí của điểm
+			M trong không gian sẽ được xác định bowir4 vệ tinh cho trước nhờ các bộ thu phát tín hiệu đặt trên các vệ tinh. Giả sử trong không gian với
+			hệ tọa độ Oxyz, có bốn vệ tinh lần lượt đặt tại A(0;4;5), B(3;0;5), C(3;4;0), D(3;4;5) và vị trí M(a;b;c) trên đoạn AB thỏa mãn tổng khoảng cách
+			từ các điểm A, B, C đến MD lớn nhất. Tính a + b + c + d</p>
+            <input type="text" name="sa_q14" class="sa-input" placeholder="Nhập câu trả lời của bạn...">
+        </div>
+
+    </form>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    <div id="notification"></div>
+</div>
+
+<script>
+    // --- CẤU HÌNH ---
+    const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyg5KT1vKt8j-TkjJEQEOxmfj2IOgLbESw8VMyfWoVygXtYsolpiJbf9-imXl8_AB_-_g/exec';
+
+    // 1. ĐÁP ÁN PHẦN 1: TRẮC NGHIỆM (0.25đ/câu)
+    const correctAnswersPart1 = {
+        q1: "A", 
+        q2: "B", 
+        q3: "A",
+		q4: "A",
+		q5: "A",
+		q6: "C"
+    };
+
+    // 2. ĐÁP ÁN PHẦN 2: ĐÚNG SAI (Thang 0.1 - 0.25 - 0.5 - 1.0)
+    // true = Đúng, false = Sai
+    const correctAnswersPart2 = {
+        q7: {
+            1: "true",
+            2: "true",
+            3: "false",
+            4: "true"
+        },
+		q8: {
+			1: "false",
+			2: "true",
+			3: "false",
+			4: "true"
+		},
+		q9: {
+			1: "true",
+			2: "false",
+			3: "true",
+			4: "true"
+		},
+		q10: {
+			1: "true",
+			2: "false",
+			3: "false",
+			4: "true"
+		}
+    };
+
+    // 3. ĐÁP ÁN PHẦN 3: TRẢ LỜI NGẮN (0.5đ/câu)
+    // Lưu ý: Viết đáp án chuẩn, code sẽ tự động viết thường và xóa khoảng trắng thừa của HS
+    const correctAnswersPart3 = {
+        q11: "0,05",
+        q12: "46",
+		q13: "22",
+		q14: "8,64"
+    };
+
+    // --- CẤU HÌNH THỜI GIAN ---
+    const TIME_LIMIT = 30; 
+    let timeInSeconds = TIME_LIMIT * 60;
+    let timerInterval;
+
+    window.onload = function() { startTimer(); };
+
+    function startTimer() {
+        const display = document.getElementById('countdown');
+        const timerBox = document.getElementById('timer-box');
+        timerInterval = setInterval(() => {
+            let m = Math.floor(timeInSeconds / 60);
+            let s = timeInSeconds % 60;
+            display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+            if (timeInSeconds < 60) timerBox.classList.add("warning");
+            if (--timeInSeconds < 0) {
+                clearInterval(timerInterval);
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function handleTimeOut() {
+        alert("⏰ ĐÃ HẾT GIỜ! Hệ thống đang tự động nộp bài.");
+        let name = document.getElementById("fullname");
+        let cls = document.getElementById("class_name");
+        if (!name.value.trim()) name.value = "Hết giờ (Chưa ghi tên)";
+        if (!cls.value.trim()) cls.value = "Unknown";
+        submitTest();
+    }
+
+    // --- HÀM TÍNH ĐIỂM & NỘP BÀI ---
+    function submitTest() {
+        const fullName = document.getElementById("fullname").value.trim();
+        const className = document.getElementById("class_name").value.trim();
+        const btn = document.getElementById("submit-btn");
+        const notif = document.getElementById("notification");
+
+        if (!fullName || !className) {
+            alert("Vui lòng nhập đầy đủ Họ Tên và Lớp!");
+            return;
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 1 (0.25 điểm/câu) ---
+        let scoreP1 = 0;
+        for (let key in correctAnswersPart1) {
+            let userOpt = document.querySelector(`input[name="${key}"]:checked`);
+            if (userOpt && userOpt.value === correctAnswersPart1[key]) {
+                scoreP1 += 0.25; // Sửa điểm tại đây
+            }
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 2 (Đúng Sai - Logic bậc thang) ---
+        let scoreP2 = 0; 
+        for (let qKey in correctAnswersPart2) {
+            let correctSubCount = 0;
+            let subAnswers = correctAnswersPart2[qKey];
+            for (let subKey in subAnswers) {
+                let inputName = `tf_${qKey}_${subKey}`;
+                let userChoice = document.querySelector(`input[name="${inputName}"]:checked`);
+                if (userChoice && userChoice.value === subAnswers[subKey]) {
+                    correctSubCount++;
+                }
+            }
+            if (correctSubCount === 1) scoreP2 += 0.1;
+            else if (correctSubCount === 2) scoreP2 += 0.25;
+            else if (correctSubCount === 3) scoreP2 += 0.5;
+            else if (correctSubCount === 4) scoreP2 += 1.0;
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 3 (Trả lời ngắn - 0.5 điểm/câu) ---
+        let scoreP3 = 0;
+        for (let key in correctAnswersPart3) {
+            let userInput = document.querySelector(`input[name="sa_${key}"]`);
+            if (userInput) {
+                let userVal = userInput.value.trim().toLowerCase(); // Xóa khoảng trắng, về chữ thường
+                let correctVal = correctAnswersPart3[key].toLowerCase();
+                if (userVal === correctVal) {
+                    scoreP3 += 0.5; // Sửa điểm tại đây
+                }
+            }
+        }
+
+        // --- TỔNG KẾT ---
+        let totalScore = scoreP1 + scoreP2 + scoreP3;
+        // Làm tròn 2 chữ số thập phân (ví dụ: 8.75)
+        totalScore = totalScore.toFixed(2); 
+
+        let finalString = `P1:${scoreP1} - P2:${scoreP2} - P3:${scoreP3} => Tổng: ${totalScore}`;
+
+        btn.disabled = true;
+        btn.innerText = "Đang gửi kết quả...";
+        notif.style.display = "none";
+        clearInterval(timerInterval);
+
+        const formData = new FormData();
+        formData.append("Họ và Tên", fullName);
+        formData.append("Lớp", className);
+        formData.append("Điểm số", finalString); // Gửi chuỗi chi tiết
+
+        fetch(googleScriptURL, { method: 'POST', body: formData })
+            .then(response => {
+                notif.className = "success";
+                notif.innerHTML = `✅ Nộp thành công!<br>Tổng điểm: <b>${totalScore}</b><br><small>(${finalString})</small>`;
+                notif.style.display = "block";
+                btn.innerText = "ĐÃ NỘP XONG";
+                let inputs = document.querySelectorAll('input');
+                inputs.forEach(input => input.disabled = true);
+            })
+            .catch(error => {
+                console.error(error);
+                notif.className = "error";
+                notif.innerText = "⚠️ Lỗi đường truyền. Vui lòng báo giáo viên!";
+                notif.style.display = "block";
+                btn.disabled = false;
+                btn.innerText = "NỘP LẠI";
+            });
+    }
+</script>
+
+</body>
+</html>
