@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Kiểm Tra Tiếng Anh</title>
+    <style>
+        /* --- CSS GIAO DIỆN --- */
+        :root { --primary-color: #4CAF50; --bg-color: #f4f4f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary-color); }
+        h3.part-title { background: #e8f5e9; padding: 10px; border-left: 5px solid var(--primary-color); margin-top: 30px; }
+
+        /* Form thông tin */
+        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9; }
+        .info-box label { font-weight: bold; display: block; margin-top: 10px; }
+        .info-box input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* Câu hỏi trắc nghiệm thường */
+        .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+        .question p { font-weight: bold; font-size: 1.1em; }
+        .options label { display: block; margin-bottom: 8px; cursor: pointer; padding: 5px; border-radius: 4px; }
+        .options label:hover { background-color: #f0f0f0; }
+
+        /* --- CSS CHO PHẦN ĐÚNG/SAI --- */
+        .tf-container { margin-top: 10px; }
+        .tf-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .tf-content { flex: 1; padding-right: 10px; }
+        .tf-options { display: flex; gap: 15px; min-width: 100px; }
+        .tf-options label { font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .tf-row:hover { background-color: #f9f9f9; }
+
+        /* --- CSS CHO PHẦN TRẢ LỜI NGẮN --- */
+        .sa-input { width: 100%; padding: 10px; border: 1px solid #aaa; border-radius: 5px; font-size: 16px; margin-top: 10px; box-sizing: border-box; }
+        .sa-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(76, 175, 80, 0.3); }
+
+        /* Nút nộp bài */
+        button#submit-btn { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; font-size: 18px; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; margin-top: 20px; }
+        button#submit-btn:hover { background-color: #45a049; }
+        button#submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Thông báo */
+        #notification { margin-top: 20px; padding: 15px; text-align: center; font-weight: bold; display: none; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .error { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+    
+        /* Đồng hồ */
+        #timer-box { position: fixed; top: 10px; right: 10px; background-color: #ff5722; color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        #timer-box.warning { background-color: #d32f2f; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.7; } }
+    </style>
+    
+    <script> MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } }; </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+    <div id="timer-box"><span>⏱️</span><span id="countdown">15:00</span></div>
+    
+<div class="container">
+    <h1>📝 BÀI KIỂM TRA TIẾNG ANH</h1>
+    
+    <div class="info-box">
+        <label>Họ và Tên:</label>
+        <input type="text" id="fullname" placeholder="Nhập họ tên đầy đủ..." required>
+        <label>Lớp:</label>
+        <input type="text" id="class_name" placeholder="Ví dụ: 12A1..." required>
+    </div>
+
+    <form id="quiz-form">
+        <h3 class="part-title">PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN</h3>
+        <p><i>(Mỗi câu đúng được 0.25 điểm)</i></p>
+        
+        <div class="question">
+            <p>Câu 1: She ______ to school every morning.</p>
+            <div class="options">
+                <label><input type="radio" name="q1" value="A"> A. go</label>
+                <label><input type="radio" name="q1" value="B"> B. goes</label>
+                <label><input type="radio" name="q1" value="C"> C. going</label>
+                <label><input type="radio" name="q1" value="D"> D. went</label>
+            </div>
+        </div>
+
+        <div class="question">
+            <p>Câu 2: They ______ football yesterday.</p>
+            <div class="options">
+                <label><input type="radio" name="q2" value="A"> A. play</label>
+                <label><input type="radio" name="q2" value="B"> B. plays</label>
+                <label><input type="radio" name="q2" value="C"> C. played</label>
+                <label><input type="radio" name="q2" value="D"> D. playing</label>
+            </div>
+        </div>
+        
+        <div class="question">
+            <p>Câu 3: Cho hàm số $y=x^2 + 2x - 3$. Tìm giá trị nhỏ nhất.</p>
+            <div class="options">
+                <label><input type="radio" name="q3" value="A"> A. $-4$</label>
+                <label><input type="radio" name="q3" value="B"> B. $-3$</label>
+                <label><input type="radio" name="q3" value="C"> C. $0$</label>
+                <label><input type="radio" name="q3" value="D"> D. $1$</label>
+            </div>
+        </div>
+
+        <h3 class="part-title">PHẦN II: TRẮC NGHIỆM ĐÚNG SAI</h3>
+        <p><i>(Chọn đúng/sai. Điểm tính theo số ý đúng trong 1 câu: 0.1 - 0.25 - 0.5 - 1.0)</i></p>
+
+        <div class="question">
+            <p>Câu 4: Read the passage about AI and decide True/False.</p>
+            <p><i>"Artificial Intelligence (AI) is changing the world..."</i></p>
+            
+            <div class="tf-container">
+                <div class="tf-row">
+                    <div class="tf-content">a) AI stands for Artificial Information.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_1" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_1" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">b) AI is changing the world.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_2" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_2" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">c) Robots can have feelings like humans.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_3" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_3" value="false"> S</label>
+                    </div>
+                </div>
+                <div class="tf-row">
+                    <div class="tf-content">d) We use AI in daily life.</div>
+                    <div class="tf-options">
+                        <label><input type="radio" name="tf_q4_4" value="true"> Đ</label>
+                        <label><input type="radio" name="tf_q4_4" value="false"> S</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="part-title">PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN</h3>
+        <p><i>(Điền đáp án vào ô trống. Mỗi câu đúng được 0.5 điểm)</i></p>
+
+        <div class="question">
+            <p>Câu 5: Write the past participle form of the verb "go".</p>
+            <input type="text" name="sa_q5" class="sa-input" placeholder="Nhập câu trả lời của bạn...">
+        </div>
+
+        <div class="question">
+            <p>Câu 6: Cho phương trình $x^2 - 4 = 0$. Tìm nghiệm dương của phương trình.</p>
+            <input type="text" name="sa_q6" class="sa-input" placeholder="Nhập số...">
+        </div>
+
+    </form>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    <div id="notification"></div>
+</div>
+
+<script>
+    // --- CẤU HÌNH ---
+    const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyg5KT1vKt8j-TkjJEQEOxmfj2IOgLbESw8VMyfWoVygXtYsolpiJbf9-imXl8_AB_-_g/exec';
+
+    // 1. ĐÁP ÁN PHẦN 1: TRẮC NGHIỆM (0.25đ/câu)
+    const correctAnswersPart1 = {
+        q1: "B", 
+        q2: "C", 
+        q3: "A"
+    };
+
+    // 2. ĐÁP ÁN PHẦN 2: ĐÚNG SAI (Thang 0.1 - 0.25 - 0.5 - 1.0)
+    // true = Đúng, false = Sai
+    const correctAnswersPart2 = {
+        q4: {
+            1: "false",
+            2: "true",
+            3: "false",
+            4: "true"
+        }
+    };
+
+    // 3. ĐÁP ÁN PHẦN 3: TRẢ LỜI NGẮN (0.5đ/câu)
+    // Lưu ý: Viết đáp án chuẩn, code sẽ tự động viết thường và xóa khoảng trắng thừa của HS
+    const correctAnswersPart3 = {
+        q5: "gone",
+        q6: "2"
+    };
+
+    // --- CẤU HÌNH THỜI GIAN ---
+    const TIME_LIMIT = 15; 
+    let timeInSeconds = TIME_LIMIT * 60;
+    let timerInterval;
+
+    window.onload = function() { startTimer(); };
+
+    function startTimer() {
+        const display = document.getElementById('countdown');
+        const timerBox = document.getElementById('timer-box');
+        timerInterval = setInterval(() => {
+            let m = Math.floor(timeInSeconds / 60);
+            let s = timeInSeconds % 60;
+            display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+            if (timeInSeconds < 60) timerBox.classList.add("warning");
+            if (--timeInSeconds < 0) {
+                clearInterval(timerInterval);
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function handleTimeOut() {
+        alert("⏰ ĐÃ HẾT GIỜ! Hệ thống đang tự động nộp bài.");
+        let name = document.getElementById("fullname");
+        let cls = document.getElementById("class_name");
+        if (!name.value.trim()) name.value = "Hết giờ (Chưa ghi tên)";
+        if (!cls.value.trim()) cls.value = "Unknown";
+        submitTest();
+    }
+
+    // --- HÀM TÍNH ĐIỂM & NỘP BÀI ---
+    function submitTest() {
+        const fullName = document.getElementById("fullname").value.trim();
+        const className = document.getElementById("class_name").value.trim();
+        const btn = document.getElementById("submit-btn");
+        const notif = document.getElementById("notification");
+
+        if (!fullName || !className) {
+            alert("Vui lòng nhập đầy đủ Họ Tên và Lớp!");
+            return;
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 1 (0.25 điểm/câu) ---
+        let scoreP1 = 0;
+        for (let key in correctAnswersPart1) {
+            let userOpt = document.querySelector(`input[name="${key}"]:checked`);
+            if (userOpt && userOpt.value === correctAnswersPart1[key]) {
+                scoreP1 += 0.25; // Sửa điểm tại đây
+            }
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 2 (Đúng Sai - Logic bậc thang) ---
+        let scoreP2 = 0; 
+        for (let qKey in correctAnswersPart2) {
+            let correctSubCount = 0;
+            let subAnswers = correctAnswersPart2[qKey];
+            for (let subKey in subAnswers) {
+                let inputName = `tf_${qKey}_${subKey}`;
+                let userChoice = document.querySelector(`input[name="${inputName}"]:checked`);
+                if (userChoice && userChoice.value === subAnswers[subKey]) {
+                    correctSubCount++;
+                }
+            }
+            if (correctSubCount === 1) scoreP2 += 0.1;
+            else if (correctSubCount === 2) scoreP2 += 0.25;
+            else if (correctSubCount === 3) scoreP2 += 0.5;
+            else if (correctSubCount === 4) scoreP2 += 1.0;
+        }
+
+        // --- TÍNH ĐIỂM PHẦN 3 (Trả lời ngắn - 0.5 điểm/câu) ---
+        let scoreP3 = 0;
+        for (let key in correctAnswersPart3) {
+            let userInput = document.querySelector(`input[name="sa_${key}"]`);
+            if (userInput) {
+                let userVal = userInput.value.trim().toLowerCase(); // Xóa khoảng trắng, về chữ thường
+                let correctVal = correctAnswersPart3[key].toLowerCase();
+                if (userVal === correctVal) {
+                    scoreP3 += 0.5; // Sửa điểm tại đây
+                }
+            }
+        }
+
+        // --- TỔNG KẾT ---
+        let totalScore = scoreP1 + scoreP2 + scoreP3;
+        // Làm tròn 2 chữ số thập phân (ví dụ: 8.75)
+        totalScore = totalScore.toFixed(2); 
+
+        let finalString = `P1:${scoreP1} - P2:${scoreP2} - P3:${scoreP3} => Tổng: ${totalScore}`;
+
+        btn.disabled = true;
+        btn.innerText = "Đang gửi kết quả...";
+        notif.style.display = "none";
+        clearInterval(timerInterval);
+
+        const formData = new FormData();
+        formData.append("Họ và Tên", fullName);
+        formData.append("Lớp", className);
+        formData.append("Điểm số", finalString); // Gửi chuỗi chi tiết
+
+        fetch(googleScriptURL, { method: 'POST', body: formData })
+            .then(response => {
+                notif.className = "success";
+                notif.innerHTML = `✅ Nộp thành công!<br>Tổng điểm: <b>${totalScore}</b><br><small>(${finalString})</small>`;
+                notif.style.display = "block";
+                btn.innerText = "ĐÃ NỘP XONG";
+                let inputs = document.querySelectorAll('input');
+                inputs.forEach(input => input.disabled = true);
+            })
+            .catch(error => {
+                console.error(error);
+                notif.className = "error";
+                notif.innerText = "⚠️ Lỗi đường truyền. Vui lòng báo giáo viên!";
+                notif.style.display = "block";
+                btn.disabled = false;
+                btn.innerText = "NỘP LẠI";
+            });
+    }
+</script>
+
+</body>
+</html>
