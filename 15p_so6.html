@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi Trắc Nghiệm Online</title>
+    <style>
+        :root { --primary: #4CAF50; --bg: #f4f4f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); }
+        .part-title { background: #e8f5e9; padding: 10px; border-left: 5px solid var(--primary); margin-top: 30px; font-weight: bold; }
+        .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+        .q-text { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; }
+        .options label { display: block; padding: 5px; cursor: pointer; }
+        .options label:hover { background: #f0f0f0; }
+        .tf-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .tf-opts { display: flex; gap: 15px; min-width: 100px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; margin-top: 20px; }
+        button:hover { background: #45a049; }
+        img { max-width: 100%; display: block; margin: 10px 0; }
+        #timer { position: fixed; top: 10px; right: 10px; background: #ff5722; color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; }
+        #notification { margin-top: 20px; padding: 15px; text-align: center; font-weight: bold; display: none; border-radius: 5px; }
+        .success { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .info-box input { width: 100%; margin-bottom: 10px; }
+    </style>
+    <script> MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } }; </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+
+<div id="timer">⏱️ <span id="countdown">30:00</span></div>
+
+<div class="container">
+    <h1>📝 ĐỀ THI TỰ ĐỘNG HÓA</h1>
+    
+    <div class="info-box">
+        <input type="text" id="fullname" placeholder="Họ và tên học sinh..." required>
+        <input type="text" id="class_name" placeholder="Lớp..." required>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    <div id="notification"></div>
+</div>
+
+<script>
+    // Link Google Script của bạn
+    const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyg5KT1vKt8j-TkjJEQEOxmfj2IOgLbESw8VMyfWoVygXtYsolpiJbf9-imXl8_AB_-_g/exec';
+    
+    // Thời gian làm bài (phút)
+    const TIME_LIMIT = 30;
+
+    // --- DANH SÁCH CÂU HỎI ---
+    // type 1: Trắc nghiệm (4 chọn 1)
+    // type 2: Đúng Sai
+    // type 3: Trả lời ngắn
+    // img: "link_anh.png" (nếu có, không có thì bỏ trống)
+    
+    const questions = [
+        // --- PHẦN 1: TRẮC NGHIỆM ---
+        {
+            type: 1,
+            text: "Câu 1: Nghiệm của phương trình $log_2(x+1)=3$ là:",
+            options: ["x=7", "x=9", "x=5", "x=8"], // Thứ tự A, B, C, D
+            correct: "A" // Đáp án đúng là A
+        },
+        {
+            type: 1,
+            text: "Câu 2: Cho hàm số có đồ thị như hình vẽ:",
+            img: "images/cau2.PNG", // Có ảnh thì điền vào đây
+            options: ["2", "1", "3", "0"],
+            correct: "B"
+        },
+        {
+            type: 1,
+            text: "Câu 3: Cho hàm số có đồ thị như hình vẽ:",
+            img: "images/cau2.PNG", // Có ảnh thì điền vào đây
+            options: ["2", "1", "3", "0"],
+            correct: "B"
+        },
+        // Muốn thêm câu hỏi? Copy khối trên và dán xuống dưới
+
+        // --- PHẦN 2: ĐÚNG SAI ---
+        {
+            type: 2,
+            text: "Câu 4: Đọc đoạn văn sau và chọn Đúng/Sai...",
+            sub_questions: [
+                "a) Ý thứ nhất của câu hỏi.",
+                "b) Ý thứ hai của câu hỏi.",
+                "c) Ý thứ ba.",
+                "d) Ý thứ tư."
+            ],
+            correct: ["true", "false", "true", "true"] // Đáp án cho a, b, c, d
+        },
+        {
+            type: 2,
+            text: "Câu 5: Đọc đoạn văn sau và chọn Đúng/Sai...",
+            sub_questions: [
+                "a) Ý thứ nhất của câu hỏi.",
+                "b) Ý thứ hai của câu hỏi.",
+                "c) Ý thứ ba.",
+                "d) Ý thứ tư."
+            ],
+            correct: ["true", "false", "true", "true"] // Đáp án cho a, b, c, d
+        },
+
+        // --- PHẦN 3: TRẢ LỜI NGẮN ---
+        {
+            type: 3,
+            text: "Câu 4: Write the past participle of 'go'.",
+            correct: "gone" // Đáp án (máy sẽ tự viết thường, xóa dấu cách thừa)
+        },
+        {
+            type: 3,
+            text: "Câu 5: Tính $15 + 20$ bằng bao nhiêu?",
+            correct: "35"
+        }
+    ];
+
+</script>
+
+<script>
+    let timerInterval;
+    let timeInSeconds = TIME_LIMIT * 60;
+
+    // Tự động vẽ câu hỏi ra màn hình
+    window.onload = function() {
+        renderQuiz();
+        startTimer();
+    };
+
+    function renderQuiz() {
+        const container = document.getElementById("quiz-container");
+        let html = "";
+        let p1_title = false, p2_title = false, p3_title = false;
+
+        questions.forEach((q, index) => {
+            let qIndex = index + 1; // Tự động đánh số câu 1, 2, 3...
+            
+            // Tự động thêm tiêu đề phần
+            if(q.type === 1 && !p1_title) { html += `<div class="part-title">PHẦN I: TRẮC NGHIỆM (0.25đ/câu)</div>`; p1_title = true; }
+            if(q.type === 2 && !p2_title) { html += `<div class="part-title">PHẦN II: ĐÚNG SAI (Thang điểm bậc thang)</div>`; p2_title = true; }
+            if(q.type === 3 && !p3_title) { html += `<div class="part-title">PHẦN III: TRẢ LỜI NGẮN (0.5đ/câu)</div>`; p3_title = true; }
+
+            html += `<div class="question">`;
+            html += `<div class="q-text">${q.text}</div>`;
+            if(q.img) html += `<img src="${q.img}" width="300">`;
+
+            // Xử lý Giao diện từng loại câu
+            if (q.type === 1) { // Trắc nghiệm
+                html += `<div class="options">`;
+                const labels = ["A", "B", "C", "D"];
+                q.options.forEach((opt, i) => {
+                    html += `<label><input type="radio" name="q_${index}" value="${labels[i]}"> <b>${labels[i]}.</b> ${opt}</label>`;
+                });
+                html += `</div>`;
+            } 
+            else if (q.type === 2) { // Đúng sai
+                html += `<div class="tf-container">`;
+                q.sub_questions.forEach((sub, j) => {
+                    html += `<div class="tf-row">
+                                <div style="flex:1">${sub}</div>
+                                <div class="tf-opts">
+                                    <label><input type="radio" name="tf_${index}_${j}" value="true"> Đ</label>
+                                    <label><input type="radio" name="tf_${index}_${j}" value="false"> S</label>
+                                </div>
+                             </div>`;
+                });
+                html += `</div>`;
+            } 
+            else if (q.type === 3) { // Trả lời ngắn
+                html += `<input type="text" name="sa_${index}" placeholder="Nhập đáp án...">`;
+            }
+            html += `</div>`;
+        });
+
+        container.innerHTML = html;
+        // Kích hoạt lại MathJax cho câu hỏi mới sinh ra
+        if(window.MathJax) MathJax.typeset(); 
+    }
+
+    function startTimer() {
+        const display = document.getElementById('countdown');
+        const timerBox = document.getElementById('timer');
+        timerInterval = setInterval(() => {
+            let m = Math.floor(timeInSeconds / 60);
+            let s = timeInSeconds % 60;
+            display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+            if (timeInSeconds < 60) timerBox.style.background = "#d32f2f";
+            if (--timeInSeconds < 0) {
+                clearInterval(timerInterval);
+                submitTest(true);
+            }
+        }, 1000);
+    }
+
+    function submitTest(auto = false) {
+        const fullName = document.getElementById("fullname").value.trim();
+        const className = document.getElementById("class_name").value.trim();
+        if (!auto && (!fullName || !className)) { alert("Vui lòng điền tên và lớp!"); return; }
+
+        let scoreP1 = 0, scoreP2 = 0, scoreP3 = 0;
+
+        questions.forEach((q, index) => {
+            // Chấm điểm Phần 1
+            if (q.type === 1) {
+                let userOpt = document.querySelector(`input[name="q_${index}"]:checked`);
+                if (userOpt && userOpt.value === q.correct) scoreP1 += 0.25;
+            }
+            // Chấm điểm Phần 2
+            else if (q.type === 2) {
+                let countCorrect = 0;
+                q.correct.forEach((ans, j) => {
+                    let userOpt = document.querySelector(`input[name="tf_${index}_${j}"]:checked`);
+                    if (userOpt && userOpt.value === ans) countCorrect++;
+                });
+                if(countCorrect===1) scoreP2+=0.1;
+                if(countCorrect===2) scoreP2+=0.25;
+                if(countCorrect===3) scoreP2+=0.5;
+                if(countCorrect===4) scoreP2+=1.0;
+            }
+            // Chấm điểm Phần 3
+            else if (q.type === 3) {
+                let userInp = document.querySelector(`input[name="sa_${index}"]`);
+                if (userInp) {
+                    let val = userInp.value.trim().toLowerCase().replace(/\s+/g, '').replace(',', '.');
+                    let corr = q.correct.toLowerCase().replace(/\s+/g, '').replace(',', '.');
+                    if (val === corr) scoreP3 += 0.5;
+                }
+            }
+        });
+
+        let total = (scoreP1 + scoreP2 + scoreP3).toFixed(2);
+        let detail = `P1:${scoreP1}-P2:${scoreP2}-P3:${scoreP3}`;
+        
+        const btn = document.getElementById("submit-btn");
+        const notif = document.getElementById("notification");
+        btn.disabled = true; btn.innerText = "Đang nộp...";
+        clearInterval(timerInterval);
+
+        const fd = new FormData();
+        fd.append("Họ và Tên", fullName || "Không tên");
+        fd.append("Lớp", className || "Unknown");
+        fd.append("Điểm số", `${detail} => Tổng: ${total}`);
+
+        fetch(googleScriptURL, { method: 'POST', body: fd })
+            .then(() => {
+                notif.className = "success";
+                notif.innerHTML = `✅ Thành công! Điểm: ${total}`;
+                notif.style.display = "block";
+                btn.innerText = "ĐÃ NỘP";
+            })
+            .catch(() => alert("Lỗi đường truyền!"));
+    }
+</script>
+
+</body>
+</html>
