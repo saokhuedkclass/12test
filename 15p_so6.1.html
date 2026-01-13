@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi Trắc Nghiệm Online</title>
+    <style>
+        :root { --primary: #4CAF50; --bg: #f4f4f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); }
+        .part-title { background: #e8f5e9; padding: 10px; border-left: 5px solid var(--primary); margin-top: 30px; font-weight: bold; }
+        .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+        .q-text { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; }
+        .options label { display: block; padding: 5px; cursor: pointer; }
+        .options label:hover { background: #f0f0f0; }
+        .tf-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .tf-opts { display: flex; gap: 15px; min-width: 100px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; margin-top: 20px; }
+        button:hover { background: #45a049; }
+        img { max-width: 100%; display: block; margin: 10px 0; }
+        #timer { position: fixed; top: 10px; right: 10px; background: #ff5722; color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; }
+        #notification { margin-top: 20px; padding: 15px; text-align: center; font-weight: bold; display: none; border-radius: 5px; }
+        .success { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .info-box input { width: 100%; margin-bottom: 10px; }
+    </style>
+    <script> MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } }; </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+
+<div id="timer">⏱️ <span id="countdown">30:00</span></div>
+
+<div class="container">
+    <h1>📝 ĐỀ THI TỰ ĐỘNG HÓA</h1>
+    
+    <div class="info-box">
+        <input type="text" id="fullname" placeholder="Họ và tên học sinh..." required>
+        <input type="text" id="class_name" placeholder="Lớp..." required>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <button id="submit-btn" onclick="submitTest()">NỘP BÀI</button>
+    <div id="notification"></div>
+</div>
+
+<script>
+    // Link Google Script của bạn
+    const googleScriptURL = 'https://script.google.com/macros/s/AKfycbyg5KT1vKt8j-TkjJEQEOxmfj2IOgLbESw8VMyfWoVygXtYsolpiJbf9-imXl8_AB_-_g/exec';
+    
+    // Thời gian làm bài (phút)
+    const TIME_LIMIT = 30;
+
+    // --- DANH SÁCH CÂU HỎI ---
+    // type 1: Trắc nghiệm (4 chọn 1)
+    // type 2: Đúng Sai
+    // type 3: Trả lời ngắn
+    // img: "link_anh.png" (nếu có, không có thì bỏ trống)
+    
+    const questions = [
+        // --- PHẦN 1: TRẮC NGHIỆM ---
+        {
+            type: 1,
+            text: "Câu 1: Nghiệm của phương trình $log_2(x+1)=3$ là:",
+            options: ["x=7", "x=9", "x=5", "x=8"], // Thứ tự A, B, C, D
+            correct: "A" // Đáp án đúng là A
+        },
+        {
+            type: 1,
+            text: "Câu 2: Cho hàm số có đồ thị như hình vẽ:",
+            img: "images/cau2.PNG", // Có ảnh thì điền vào đây
+            options: ["2", "1", "3", "0"],
+            correct: "B"
+        },
+        {
+            type: 1,
+            text: "Câu 3: Cho hàm số có đồ thị như hình vẽ:",
+            img: "images/cau2.PNG", // Có ảnh thì điền vào đây
+            options: ["2", "1", "3", "0"],
+            correct: "B"
+        },
+        // Muốn thêm câu hỏi? Copy khối trên và dán xuống dưới
+
+        // --- PHẦN 2: ĐÚNG SAI ---
+        {
+            type: 2,
+            text: "Câu 4: Đọc đoạn văn sau và chọn Đúng/Sai...",
+            sub_questions: [
+                "a) Ý thứ nhất của câu hỏi.",
+                "b) Ý thứ hai của câu hỏi.",
+                "c) Ý thứ ba.",
+                "d) Ý thứ tư."
+            ],
+            correct: ["true", "false", "true", "true"] // Đáp án cho a, b, c, d
+        },
+        {
+            type: 2,
+            text: "Câu 5: Đọc đoạn văn sau và chọn Đúng/Sai...",
+            sub_questions: [
+                "a) Ý thứ nhất của câu hỏi.",
+                "b) Ý thứ hai của câu hỏi.",
+                "c) Ý thứ ba.",
+                "d) Ý thứ tư."
+            ],
+            correct: ["true", "false", "true", "true"] // Đáp án cho a, b, c, d
+        },
+
+        // --- PHẦN 3: TRẢ LỜI NGẮN ---
+        {
+            type: 3,
+            text: "Câu 4: Write the past participle of 'go'.",
+            correct: "gone" // Đáp án (máy sẽ tự viết thường, xóa dấu cách thừa)
+        },
+        {
+            type: 3,
+            text: "Câu 5: Tính $15 + 20$ bằng bao nhiêu?",
+            correct: "35"
+        }
+    ];
+
+</script>
+
+<script>
+    
+</script>
+
+</body>
+</html>
