@@ -1,0 +1,44 @@
+/* --- CSS GIAO DIỆN --- */
+        :root { --primary-color: #4CAF50; --bg-color: #f4f4f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary-color); }
+        h3.part-title { background: #e8f5e9; padding: 10px; border-left: 5px solid var(--primary-color); margin-top: 30px; }
+
+        /* Form thông tin */
+        .info-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9; }
+        .info-box label { font-weight: bold; display: block; margin-top: 10px; }
+        .info-box input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* Câu hỏi trắc nghiệm thường */
+        .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ddd; }
+        .question p { font-weight: bold; font-size: 1.1em; }
+        .options label { display: block; margin-bottom: 8px; cursor: pointer; padding: 5px; border-radius: 4px; }
+        .options label:hover { background-color: #f0f0f0; }
+
+        /* --- CSS CHO PHẦN ĐÚNG/SAI --- */
+        .tf-container { margin-top: 10px; }
+        .tf-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .tf-content { flex: 1; padding-right: 10px; }
+        .tf-options { display: flex; gap: 15px; min-width: 100px; }
+        .tf-options label { font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .tf-row:hover { background-color: #f9f9f9; }
+
+        /* --- CSS CHO PHẦN TRẢ LỜI NGẮN --- */
+        .sa-input { width: 100%; padding: 10px; border: 1px solid #aaa; border-radius: 5px; font-size: 16px; margin-top: 10px; box-sizing: border-box; }
+        .sa-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(76, 175, 80, 0.3); }
+
+        /* Nút nộp bài */
+        button#submit-btn { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; font-size: 18px; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; margin-top: 20px; }
+        button#submit-btn:hover { background-color: #45a049; }
+        button#submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Thông báo */
+        #notification { margin-top: 20px; padding: 15px; text-align: center; font-weight: bold; display: none; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .error { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+    
+        /* Đồng hồ */
+        #timer-box { position: fixed; top: 10px; right: 10px; background-color: #ff5722; color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        #timer-box.warning { background-color: #d32f2f; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.7; } }
