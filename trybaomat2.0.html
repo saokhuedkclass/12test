@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Kiểm Tra Trực Tuyến</title>
+    <style>
+        body { display: flex; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        #left { flex: 7; border-right: 2px solid #ccc; background: #f0f0f0; }
+        #right { flex: 3; padding: 20px; overflow-y: auto; background: #fff; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .question { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .option { margin-right: 5px; padding: 8px 15px; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px; }
+        .selected { background-color: #007bff; color: white; border-color: #0056b3; }
+        .correct-answer { border: 2px solid green !important; background-color: #e8f5e9 !important; }
+        .wrong-answer { border: 2px solid red !important; background-color: #ffebee !important; }
+        .feedback { font-weight: bold; margin-top: 5px; display: block; }
+        input[type="text"] { width: 90%; padding: 8px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="left">
+    <iframe src="https://drive.google.com/file/d/1tDgvoGNFFuDsxDOfN8HzTiGUhYXU6bVB/preview"></iframe>
+</div>
+
+<div id="right">
+    <h2>Bài Kiểm Tra</h2>
+    <input type="text" id="className" placeholder="Nhập tên lớp (VD: 12A1)" style="margin-bottom: 20px;">
+    <div id="quizContainer"></div>
+    <button id="submitBtn" onclick="submitTest()" style="padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%;">Nộp bài</button>
+</div>
+
+<script>
+    // BẢO MẬT MẬT KHẨU
+    const secretKey = "TOAN2026"; 
+    const password = prompt("Vui lòng nhập mật mã để làm bài:");
+    if (password !== secretKey) {
+        alert("Sai mật mã!");
+        document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px;'>Truy cập bị từ chối.</h1>";
+        throw new Error("Wrong password");
+    }
+
+    
+    // Cấu trúc 22 câu hỏi
+    const questions = [
+    // 12 Câu Trắc Nghiệm (MCQ)
+    { id: 1, type: 'mcq', correct: 'A' },
+    { id: 2, type: 'mcq', correct: 'B' },
+    { id: 3, type: 'mcq', correct: 'C' },
+    { id: 4, type: 'mcq', correct: 'D' },
+    { id: 5, type: 'mcq', correct: 'A' },
+    { id: 6, type: 'mcq', correct: 'B' },
+    { id: 7, type: 'mcq', correct: 'C' },
+    { id: 8, type: 'mcq', correct: 'D' },
+    { id: 9, type: 'mcq', correct: 'A' },
+    { id: 10, type: 'mcq', correct: 'B' },
+    { id: 11, type: 'mcq', correct: 'C' },
+    { id: 12, type: 'mcq', correct: 'D' },
+
+    // 4 Câu Đúng/Sai (TF) - true là Đúng, false là Sai
+    { id: 13, type: 'tf', correct: 'true' },
+    { id: 14, type: 'tf', correct: 'false' },
+    { id: 15, type: 'tf', correct: 'true' },
+    { id: 16, type: 'tf', correct: 'false' },
+
+    // 6 Câu Trả lời ngắn (Text) - Viết đáp án chuẩn vào đây
+    { id: 17, type: 'text', correct: '10' },
+    { id: 18, type: 'text', correct: 'x=2' },
+    { id: 19, type: 'text', correct: '5/2' },
+    { id: 20, type: 'text', correct: 'vô nghiệm' },
+    { id: 21, type: 'text', correct: 'π' },
+    { id: 22, type: 'text', correct: '120' }
+];
+
+    const userAnswers = {};
+    const container = document.getElementById('quizContainer');
+
+    // Khởi tạo giao diện
+    questions.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.id = `q-${q.id}`;
+        div.innerHTML = `<strong>Câu ${q.id}:</strong><br>`;
+        
+        if (q.type === 'mcq') {
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                div.innerHTML += `<button class="option" onclick="selectAnswer(${q.id}, '${opt}', this)">${opt}</button>`;
+            });
+        } else if (q.type === 'tf') {
+            div.innerHTML += `<button class="option" onclick="selectAnswer(${q.id}, 'true', this)">Đúng</button>`;
+            div.innerHTML += `<button class="option" onclick="selectAnswer(${q.id}, 'false', this)">Sai</button>`;
+        } else {
+            div.innerHTML += `<input type="text" oninput="saveText(${q.id}, this.value)" placeholder="Nhập câu trả lời...">`;
+        }
+        container.appendChild(div);
+    });
+
+    function selectAnswer(id, val, btn) {
+        userAnswers[id] = val;
+        btn.parentElement.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    function saveText(id, val) {
+        userAnswers[id] = val.toLowerCase().trim();
+    }
+
+    async function submitTest() {
+        const className = document.getElementById('className').value;
+        if (!className) return alert("Vui lòng nhập tên lớp!");
+
+        let score = 0;
+        let details = [];
+
+        questions.forEach(q => {
+            const ans = userAnswers[q.id];
+            const isCorrect = (ans === q.correct);
+            if (isCorrect) score++;
+            details.push(`C${q.id}:${ans || 'X'}(${isCorrect ? 'Đ' : 'S'})`);
+
+            // Hiển thị phản hồi UI
+            const el = document.getElementById(`q-${q.id}`);
+            el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+            el.innerHTML += `<span class="feedback">${isCorrect ? '✅ Đúng' : '❌ Sai (Đáp án: ' + q.correct + ')'}</span>`;
+            el.querySelectorAll('button, input').forEach(i => i.disabled = true);
+        });
+
+        document.getElementById('submitBtn').disabled = true;
+
+        // Gửi data tới Google Sheet
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzMaq-bBNkCHLM9iUjCVKdwnaJSzD8jXPnloKqdYnHySYOLWdNM0ru4FX47jYcQBefD/exec";
+        fetch(scriptUrl, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ className: className, results: `Điểm: ${score}/22 - ${details.join('; ')}` })
+        });
+
+        alert("Nộp bài xong! Điểm của bạn: " + score + "/22");
+    }
+</script>
+</body>
+</html>
