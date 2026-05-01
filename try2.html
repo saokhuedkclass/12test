@@ -33,31 +33,6 @@
 
 <script>
     
-    // --- PHẦN BẢO MẬT MẬT KHẨU ---
-    const secretKey = "TOAN2026"; // Bạn hãy thay đổi mật khẩu này theo ý muốn
-    
-    function checkAccess() {
-        const password = prompt("Hệ thống kiểm tra: Vui lòng nhập mật mã để xem đề thi:");
-        if (password === null || password !== secretKey) {
-            alert("Mật mã không chính xác hoặc bạn đã hủy truy cập!");
-            document.body.innerHTML = `
-                <div style="text-align:center; margin-top:100px; color:red;">
-                    <h1>Truy cập bị từ chối</h1>
-                    <p>Vui lòng tải lại trang và nhập đúng mật mã được cấp.</p>
-                </div>`;
-            return false;
-        }
-        return true;
-    }
-
-    // Chạy kiểm tra ngay khi trang vừa tải xong
-    if (checkAccess()) {
-        // Nếu đúng mật khẩu, các code khởi tạo câu hỏi bên dưới mới chạy
-        console.log("Truy cập hợp lệ");
-    } else {
-        throw new Error("Dừng thực thi do sai mật mã");
-    }
-    // --- HẾT PHẦN BẢO MẬT ---
     
     // Cấu trúc 22 câu hỏi
     const questions = [
