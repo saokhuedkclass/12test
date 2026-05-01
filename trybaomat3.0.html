@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Kiểm Tra Trực Tuyến</title>
+    <style>
+        body { display: flex; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        #left { flex: 7; border-right: 2px solid #ccc; background: #f0f0f0; }
+        #right { flex: 3; padding: 20px; overflow-y: auto; background: #fff; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .question { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .tf-group { margin-left: 15px; margin-bottom: 10px; padding: 5px; border-left: 3px solid #007bff; }
+        .option { margin-right: 5px; padding: 5px 12px; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px; font-size: 13px; }
+        .selected { background-color: #007bff; color: white; border-color: #0056b3; }
+        .correct-answer { border: 2px solid green !important; background-color: #e8f5e9 !important; }
+        .wrong-answer { border: 2px solid red !important; background-color: #ffebee !important; }
+        .feedback { font-weight: bold; margin-top: 5px; display: block; color: #333; }
+        input[type="text"] { width: 90%; padding: 8px; margin-top: 5px; }
+        h4 { margin: 10px 0; color: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div id="left">
+    <iframe src="https://drive.google.com/file/d/1tDgvoGNFFuDsxDOfN8HzTiGUhYXU6bVB/preview"></iframe>
+</div>
+
+<div id="right">
+    <h2>Bài Kiểm Tra</h2>
+    <input type="text" id="className" placeholder="Nhập tên lớp (VD: 12A1)" style="margin-bottom: 20px; width: 95%;">
+    <div id="quizContainer"></div>
+    <button id="submitBtn" onclick="submitTest()" style="padding: 12px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold;">Nộp bài</button>
+</div>
+
+<script>
+    const secretKey = "TOAN2026"; 
+    const password = prompt("Vui lòng nhập mật mã để làm bài:");
+    if (password !== secretKey) {
+        alert("Sai mật mã!");
+        document.body.innerHTML = "<h1 style='text-align:center;margin-top:50px;'>Truy cập bị từ chối.</h1>";
+        throw new Error("Wrong password");
+    }
+
+    // Cấu trúc đáp án theo yêu cầu mới
+    const questions = [
+        // 12 Câu Trắc Nghiệm (0.25đ/câu)
+        ...Array.from({length: 12}, (_, i) => ({ id: i+1, type: 'mcq', correct: 'A' })),
+        
+        // 4 Câu Đúng/Sai (Mỗi câu có 4 ý a, b, c, d)
+        { id: 13, type: 'tf_group', correct: {a: 'true', b: 'false', c: 'true', d: 'false'} },
+        { id: 14, type: 'tf_group', correct: {a: 'true', b: 'true', c: 'false', d: 'false'} },
+        { id: 15, type: 'tf_group', correct: {a: 'false', b: 'false', c: 'true', d: 'true'} },
+        { id: 16, type: 'tf_group', correct: {a: 'true', b: 'false', c: 'false', d: 'true'} },
+
+        // 6 Câu Trả lời ngắn (0.5đ/câu)
+        { id: 17, type: 'text', correct: '10' },
+        { id: 18, type: 'text', correct: '2' },
+        { id: 19, type: 'text', correct: '2.5' },
+        { id: 20, type: 'text', correct: 'vô nghiệm' },
+        { id: 21, type: 'text', correct: '3.14' },
+        { id: 22, type: 'text', correct: '120' }
+    ];
+
+    const userAnswers = {};
+    const container = document.getElementById('quizContainer');
+
+    questions.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.id = `q-${q.id}`;
+        
+        if (q.type === 'mcq') {
+            div.innerHTML = `<strong>Câu ${q.id}:</strong> (MCQ)<br>`;
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                div.innerHTML += `<button class="option" onclick="selectAnswer(${q.id}, '${opt}', this)">${opt}</button>`;
+            });
+        } else if (q.type === 'tf_group') {
+            div.innerHTML = `<strong>Câu ${q.id}:</strong> (Đúng/Sai)<br>`;
+            ['a', 'b', 'c', 'd'].forEach(sub => {
+                const subDiv = document.createElement('div');
+                subDiv.className = 'tf-group';
+                subDiv.innerHTML = `Ý ${sub}: `;
+                ['Đúng', 'Sai'].forEach(label => {
+                    const val = (label === 'Đúng' ? 'true' : 'false');
+                    subDiv.innerHTML += `<button class="option" onclick="selectSubAnswer(${q.id}, '${sub}', '${val}', this)">${label}</button>`;
+                });
+                div.appendChild(subDiv);
+            });
+        } else {
+            div.innerHTML = `<strong>Câu ${q.id}:</strong> (Ngắn)<br>`;
+            div.innerHTML += `<input type="text" oninput="saveText(${q.id}, this.value)" placeholder="Nhập đáp án...">`;
+        }
+        container.appendChild(div);
+    });
+
+    function selectAnswer(id, val, btn) {
+        userAnswers[id] = val;
+        btn.parentElement.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    function selectSubAnswer(id, sub, val, btn) {
+        if (!userAnswers[id]) userAnswers[id] = {};
+        userAnswers[id][sub] = val;
+        btn.parentElement.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    function saveText(id, val) {
+        userAnswers[id] = val.toLowerCase().trim();
+    }
+
+    async function submitTest() {
+        const className = document.getElementById('className').value;
+        if (!className) return alert("Vui lòng nhập tên lớp!");
+
+        let totalScore = 0;
+        let logDetails = [];
+
+        questions.forEach(q => {
+            const el = document.getElementById(`q-${q.id}`);
+            let qScore = 0;
+
+            if (q.type === 'mcq') {
+                const isCorrect = (userAnswers[q.id] === q.correct);
+                if (isCorrect) qScore = 0.25;
+                el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+                el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+            } 
+            else if (q.type === 'tf_group') {
+                let correctSubCount = 0;
+                const userAns = userAnswers[q.id] || {};
+                ['a', 'b', 'c', 'd'].forEach(sub => {
+                    if (userAns[sub] === q.correct[sub]) correctSubCount++;
+                });
+
+                if (correctSubCount === 1) qScore = 0.1;
+                else if (correctSubCount === 2) qScore = 0.25;
+                else if (correctSubCount === 3) qScore = 0.5;
+                else if (correctSubCount === 4) qScore = 1.0;
+
+                el.classList.add(correctSubCount === 4 ? 'correct-answer' : (correctSubCount > 0 ? 'correct-answer' : 'wrong-answer'));
+                el.innerHTML += `<span class="feedback">Đúng ${correctSubCount}/4 ý (+${qScore})</span>`;
+            } 
+            else {
+                const isCorrect = (userAnswers[q.id] === q.correct);
+                if (isCorrect) qScore = 0.5;
+                el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+                el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+            }
+
+            totalScore += qScore;
+            logDetails.push(`C${q.id}:${qScore}đ`);
+            el.querySelectorAll('button, input').forEach(i => i.disabled = true);
+        });
+
+        totalScore = Math.round(totalScore * 100) / 100;
+        document.getElementById('submitBtn').disabled = true;
+
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzMaq-bBNkCHLM9iUjCVKdwnaJSzD8jXPnloKqdYnHySYOLWdNM0ru4FX47jYcQBefD/exec";
+        fetch(scriptUrl, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ className: className, results: `Tổng: ${totalScore}/10 - Chi tiết: ${logDetails.join('|')}` })
+        });
+
+        alert(`Nộp bài thành công!\nTổng điểm của bạn: ${totalScore}/10`);
+    }
+</script>
+</body>
+</html>
