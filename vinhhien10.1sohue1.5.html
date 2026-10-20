@@ -16,7 +16,7 @@
         .correct-answer { border: 2px solid green !important; background-color: #e8f5e9 !important; }
         .wrong-answer { border: 2px solid red !important; background-color: #ffebee !important; }
         .feedback { font-weight: bold; margin-top: 5px; display: block; color: #333; }
-        input[type="text"], input[type="password"] { width: 90%; padding: 8px; margin-top: 5px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
         /* Đồng hồ đếm ngược */
         #timer {
@@ -33,23 +33,35 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        .student-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-<!-- Khung khóa bảo mật mật khẩu -->
+<!-- Khung khóa bảo mật mật khẩu + Nhập danh tính học sinh -->
 <div id="authOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div style="background: #fff; padding: 30px; border-radius: 8px; text-align: center; max-width: 360px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-        <h3 style="margin-top: 0; color: #333;">🔒 Yêu Cầu Mật Khẩu</h3>
-        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Vui lòng nhập mật mã để mở đề thi:</p>
-        <input type="password" id="inputPass" placeholder="Nhập mật mã..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px;">
-        <button onclick="checkPass()" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Vào Làm Bài</button>
-        <p id="authError" style="color: red; margin-top: 10px; display: none; font-size: 13px; font-weight: bold;">Sai mật mã, vui lòng nhập lại!</p>
+    <div style="background: #fff; padding: 30px; border-radius: 8px; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <h3 style="margin-top: 0; color: #333;">🔒 THÔNG TIN THÍ SINH</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Vui lòng điền đủ thông tin và mã thi để mở đề:</p>
+        
+        <input type="text" id="inputFullName" placeholder="Họ và tên học sinh..." required>
+        <input type="text" id="inputClassName" placeholder="Lớp (VD: 12A1)..." required>
+        <input type="password" id="inputPass" placeholder="Nhập mật mã làm bài..." required>
+        
+        <button onclick="checkPass()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">VÀO LÀM BÀI</button>
+        <p id="authError" style="color: red; margin-top: 10px; display: none; font-size: 13px; font-weight: bold;"></p>
     </div>
 </div>
 
 <div id="left">
     <iframe 
+        id="pdfFrame"
         src="https://drive.google.com/file/d/1ZjnpxtdleUo_vbwGqC3tzdJBzrYdFww7/preview" 
         width="100%" 
         height="600px" 
@@ -59,33 +71,46 @@
 
 <div id="right">
     <div id="timer">Thời gian còn lại: 90:00</div>
-    <h2>Bài Kiểm Tra</h2>
-    <input type="text" id="className" placeholder="Nhập tên lớp (VD: 12A1)" style="margin-bottom: 20px; width: 95%;">
+    <div class="student-header" id="studentDisplay" style="display:none;"></div>
+    <h2>Phiếu Trả Lời</h2>
     <div id="quizContainer"></div>
-    <button id="submitBtn" onclick="submitTest()" style="padding: 12px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold;">Nộp bài</button>
+    <button id="submitBtn" onclick="submitTest(false)" style="padding: 12px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold;">Nộp bài</button>
 </div>
 
 <script>
     const secretKey = "TOAN2026"; 
+    let studentInfo = { name: "", class: "" };
 
     function checkPass() {
+        const name = document.getElementById("inputFullName").value.trim();
+        const className = document.getElementById("inputClassName").value.trim();
         const entered = document.getElementById("inputPass").value;
+        const err = document.getElementById("authError");
+
+        if (!name || !className) {
+            err.innerText = "Vui lòng nhập đầy đủ Họ tên và Lớp!";
+            err.style.display = "block";
+            return;
+        }
+
         if (entered === secretKey) {
+            studentInfo.name = name;
+            studentInfo.class = className;
+            document.getElementById("studentDisplay").innerHTML = `Thí sinh: <b>${name}</b> | Lớp: <b>${className}</b>`;
+            document.getElementById("studentDisplay").style.display = "block";
             document.getElementById("authOverlay").style.display = "none";
         } else {
-            document.getElementById("authError").style.display = "block";
+            err.innerText = "Sai mật mã, vui lòng nhập lại!";
+            err.style.display = "block";
             document.getElementById("inputPass").value = "";
             document.getElementById("inputPass").focus();
         }
     }
 
     document.getElementById("inputPass").addEventListener("keyup", function(event) {
-        if (event.key === "Enter") {
-            checkPass();
-        }
+        if (event.key === "Enter") checkPass();
     });
 
-    // Cấu trúc đáp án
     const questions = [
         { id: 1, type: 'mcq', correct: 'A' },
         { id: 2, type: 'mcq', correct: 'A' },
@@ -115,7 +140,6 @@
     const container = document.getElementById('quizContainer');
     let isSubmitted = false;
 
-    // Quản lý đếm ngược
     let timeLeft = 90 * 60;
     const timerDisplay = document.getElementById('timer');
 
@@ -131,8 +155,8 @@
 
         if (timeLeft <= 0) {
             clearInterval(countdown);
-            alert("Hết giờ làm bài! Hệ thống đang tự động nộp bài.");
-            autoSubmit("Hết giờ - Tự động nộp");
+            alert("Hết giờ làm bài! Hệ thống tự động thu bài.");
+            submitTest(false, "Hết giờ nộp bài");
         }
         timeLeft--;
     }, 1000);
@@ -186,22 +210,12 @@
         userAnswers[id] = val.toLowerCase().trim();
     }
 
-    function autoSubmit(reason = "Tự động nộp") {
-        const classInput = document.getElementById('className');
-        if (!classInput.value.trim()) {
-            classInput.value = reason;
-        }
-        submitTest();
-    }
-
-    async function submitTest() {
+    // isViolation = true: Khóa màn hình, xóa đáp án, không cho xem lại
+    async function submitTest(isViolation = false, note = "Nộp bài bình thường") {
         if (isSubmitted) return;
-        
-        const className = document.getElementById('className').value;
-        if (!className) return alert("Vui lòng nhập tên lớp trước khi nộp bài!");
-
         isSubmitted = true;
         clearInterval(countdown);
+
         let totalScore = 0;
         let logDetails = [];
 
@@ -212,8 +226,10 @@
             if (q.type === 'mcq') {
                 const isCorrect = (userAnswers[q.id] === q.correct);
                 if (isCorrect) qScore = 0.25;
-                el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
-                el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+                if (!isViolation) {
+                    el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+                    el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+                }
             } 
             else if (q.type === 'tf_group') {
                 let correctSubCount = 0;
@@ -227,41 +243,56 @@
                 else if (correctSubCount === 3) qScore = 0.5;
                 else if (correctSubCount === 4) qScore = 1.0;
 
-                el.classList.add(correctSubCount === 4 ? 'correct-answer' : (correctSubCount > 0 ? 'correct-answer' : 'wrong-answer'));
-                el.innerHTML += `<span class="feedback">Đúng ${correctSubCount}/4 ý (+${qScore})</span>`;
+                if (!isViolation) {
+                    el.classList.add(correctSubCount > 0 ? 'correct-answer' : 'wrong-answer');
+                    el.innerHTML += `<span class="feedback">Đúng ${correctSubCount}/4 ý (+${qScore})</span>`;
+                }
             } 
             else {
                 const isCorrect = (userAnswers[q.id] === q.correct);
                 if (isCorrect) qScore = 0.5;
-                el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
-                el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+                if (!isViolation) {
+                    el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+                    el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
+                }
             }
 
             totalScore += qScore;
             logDetails.push(`C${q.id}:${qScore}đ`);
-            el.querySelectorAll('button, input').forEach(i => i.disabled = true);
+            if (el) el.querySelectorAll('button, input').forEach(i => i.disabled = true);
         });
 
         totalScore = Math.round(totalScore * 100) / 100;
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').style.background = "#ccc";
-        timerDisplay.innerHTML = "BÀI ĐÃ NỘP";
-        timerDisplay.style.background = "#28a745";
 
+        // Gửi kết quả về Google Sheets
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzMaq-bBNkCHLM9iUjCVKdwnaJSzD8jXPnloKqdYnHySYOLWdNM0ru4FX47jYcQBefD/exec";
         fetch(scriptUrl, {
             method: "POST",
             mode: "no-cors",
             body: JSON.stringify({ 
-                className: className, 
-                results: `Tổng: ${totalScore}/10 - Chi tiết: ${logDetails.join('|')} - Rời tab: ${tabSwitchCount} lần` 
+                className: `${studentInfo.class} - ${studentInfo.name}`, 
+                results: `Tổng: ${totalScore}/10 | ${note} | Rời tab: ${tabSwitchCount} lần | Chi tiết: ${logDetails.join('|')}` 
             })
         });
 
-        alert(`Nộp bài thành công!\nTổng điểm của bạn: ${totalScore}/10`);
+        // Xử lý giao diện khi bị vi phạm
+        if (isViolation) {
+            timerDisplay.innerHTML = "BÀI BỊ HỦY DO VI PHẠM";
+            timerDisplay.style.background = "#000";
+            // Xóa sạch nội dung đề PDF và cột đáp án để chống xem trộm
+            document.getElementById("left").innerHTML = "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#888;'><h3>ĐÃ KHÓA ĐỀ THI</h3></div>";
+            document.getElementById("quizContainer").innerHTML = "<h3 style='color:red;text-align:center;margin-top:40px;'>⚠️ Bài thi đã bị thu tự động do vi phạm quy chế chuyển tab quá 3 lần!<br><br>Hệ thống không hiển thị đáp án.</h3>";
+            document.getElementById("submitBtn").style.display = "none";
+        } else {
+            timerDisplay.innerHTML = "BÀI ĐÃ NỘP";
+            timerDisplay.style.background = "#28a745";
+            alert(`Nộp bài thành công!\nĐiểm của bạn: ${totalScore}/10`);
+        }
     }
 
-    // --- THEO DÕI VÀ TỰ ĐỘNG THU BÀI KHI RỜI TAB 3 LẦN ---
+    // --- THEO DÕI VI PHẠM RỜI TAB ---
     let tabSwitchCount = 0;
     const MAX_TAB_SWITCH = 3;
     let wasLeft = false;
@@ -277,10 +308,10 @@
             tabSwitchCount++;
 
             if (tabSwitchCount >= MAX_TAB_SWITCH) {
-                alert(`⚠️ VI PHẠM QUY CHẾ:\nBạn đã rời khỏi trang thi ${tabSwitchCount} lần! Hệ thống tự động khóa và thu bài thi ngay bây giờ.`);
-                autoSubmit(`Vi phạm rời tab ${tabSwitchCount} lần`);
+                alert(`⚠️ VI PHẠM QUY CHẾ:\nBạn đã chuyển tab ${tabSwitchCount} lần!\nBài thi sẽ bị thu và KHÓA TOÀN BỘ ngay lập tức.`);
+                submitTest(true, `VI PHẠM chuyển tab ${tabSwitchCount} lần`);
             } else {
-                alert(`⚠️ CẢNH BÁO VI PHẠM (Lần ${tabSwitchCount}/${MAX_TAB_SWITCH}):\nBạn không được phép chuyển tab hoặc thoát khỏi màn hình làm bài! Rời tab đủ 3 lần hệ thống sẽ tự động thu bài.`);
+                alert(`⚠️ CẢNH BÁO VI PHẠM (Lần ${tabSwitchCount}/${MAX_TAB_SWITCH}):\nKhông được rời khỏi màn hình làm bài! Vi phạm đủ 3 lần hệ thống sẽ tự động thu bài và không hiển thị đáp án.`);
             }
         }
     });
