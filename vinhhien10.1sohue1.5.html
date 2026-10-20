@@ -5,8 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bài Kiểm Tra Trực Tuyến</title>
     <style>
-        body { display: flex; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
-        #left { flex: 7; border-right: 2px solid #ccc; background: #f0f0f0; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f0f0; }
+        
+        /* MÀN HÌNH KHÓA BẮT BUỘC NHẬP DANH TÍNH */
+        #authOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #1a1a1a;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .auth-card input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        .auth-card button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* KHUNG LÀM BÀI */
+        #mainApp {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+        }
+        #left { flex: 7; border-right: 2px solid #ccc; background: #e0e0e0; }
         #right { flex: 3; padding: 20px; overflow-y: auto; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
         .question { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
@@ -16,9 +66,8 @@
         .correct-answer { border: 2px solid green !important; background-color: #e8f5e9 !important; }
         .wrong-answer { border: 2px solid red !important; background-color: #ffebee !important; }
         .feedback { font-weight: bold; margin-top: 5px; display: block; color: #333; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="text"] { width: 90%; padding: 8px; margin-top: 5px; }
         
-        /* Đồng hồ đếm ngược */
         #timer {
             position: sticky;
             top: 0;
@@ -33,84 +82,61 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .student-header {
-            background: #e9ecef;
-            padding: 10px 15px;
+        .user-tag {
+            background: #e7f3ff;
+            color: #0056b3;
+            padding: 10px;
             border-radius: 5px;
             margin-bottom: 15px;
-            font-size: 14px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<!-- Khung khóa bảo mật mật khẩu + Nhập danh tính học sinh -->
-<div id="authOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div style="background: #fff; padding: 30px; border-radius: 8px; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-        <h3 style="margin-top: 0; color: #333;">🔒 THÔNG TIN THÍ SINH</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Vui lòng điền đủ thông tin và mã thi để mở đề:</p>
-        
-        <input type="text" id="inputFullName" placeholder="Họ và tên học sinh..." required>
-        <input type="text" id="inputClassName" placeholder="Lớp (VD: 12A1)..." required>
-        <input type="password" id="inputPass" placeholder="Nhập mật mã làm bài..." required>
-        
-        <button onclick="checkPass()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">VÀO LÀM BÀI</button>
-        <p id="authError" style="color: red; margin-top: 10px; display: none; font-size: 13px; font-weight: bold;"></p>
+<!-- 1. POPUP BẮT BUỘC ĐIỀN DANH TÍNH & MẬT KHẨU -->
+<div id="authOverlay">
+    <div class="auth-card">
+        <h2 style="margin-top:0; color:#333;">🔒 PHÒNG THI ONLINE</h2>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Điền đủ thông tin để kích hoạt bài thi:</p>
+        <input type="text" id="rawName" placeholder="Họ và tên thí sinh...">
+        <input type="text" id="rawClass" placeholder="Lớp (ví dụ: 12A1)...">
+        <input type="password" id="rawKey" placeholder="Mật mã làm bài...">
+        <button onclick="startApp()">VÀO LÀM BÀI</button>
+        <p id="authMsg" style="color:red; font-size:13px; margin-top:10px; display:none; font-weight:bold;"></p>
     </div>
 </div>
 
-<div id="left">
-    <iframe 
-        id="pdfFrame"
-        src="https://drive.google.com/file/d/1ZjnpxtdleUo_vbwGqC3tzdJBzrYdFww7/preview" 
-        width="100%" 
-        height="600px" 
-        sandbox="allow-scripts allow-same-origin">
-    </iframe>
-</div>
+<!-- 2. GIAO DIỆN BÀI THI CHÍNH -->
+<div id="mainApp">
+    <div id="left">
+        <iframe 
+            src="https://drive.google.com/file/d/1ZjnpxtdleUo_vbwGqC3tzdJBzrYdFww7/preview" 
+            sandbox="allow-scripts allow-same-origin">
+        </iframe>
+    </div>
 
-<div id="right">
-    <div id="timer">Thời gian còn lại: 90:00</div>
-    <div class="student-header" id="studentDisplay" style="display:none;"></div>
-    <h2>Phiếu Trả Lời</h2>
-    <div id="quizContainer"></div>
-    <button id="submitBtn" onclick="submitTest(false)" style="padding: 12px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold;">Nộp bài</button>
+    <div id="right">
+        <div id="timer">Thời gian còn lại: 90:00</div>
+        <div class="user-tag" id="userHeader"></div>
+        <h2>Phiếu Trả Lời</h2>
+        <div id="quizContainer"></div>
+        <button id="submitBtn" onclick="submitExam(false)" style="padding: 12px; background: #28a745; color: white; border: none; cursor: pointer; width: 100%; font-weight: bold;">Nộp bài</button>
+    </div>
 </div>
 
 <script>
-    const secretKey = "TOAN2026"; 
-    let studentInfo = { name: "", class: "" };
+    const SECRET_KEY = "TOAN2026";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMaq-bBNkCHLM9iUjCVKdwnaJSzD8jXPnloKqdYnHySYOLWdNM0ru4FX47jYcQBefD/exec";
 
-    function checkPass() {
-        const name = document.getElementById("inputFullName").value.trim();
-        const className = document.getElementById("inputClassName").value.trim();
-        const entered = document.getElementById("inputPass").value;
-        const err = document.getElementById("authError");
+    let studentProfile = { name: "", class: "" };
+    let isTestRunning = false;
+    let isSubmitted = false;
+    let tabViolations = 0;
+    const MAX_VIOLATIONS = 3;
+    let isTabAway = false;
 
-        if (!name || !className) {
-            err.innerText = "Vui lòng nhập đầy đủ Họ tên và Lớp!";
-            err.style.display = "block";
-            return;
-        }
-
-        if (entered === secretKey) {
-            studentInfo.name = name;
-            studentInfo.class = className;
-            document.getElementById("studentDisplay").innerHTML = `Thí sinh: <b>${name}</b> | Lớp: <b>${className}</b>`;
-            document.getElementById("studentDisplay").style.display = "block";
-            document.getElementById("authOverlay").style.display = "none";
-        } else {
-            err.innerText = "Sai mật mã, vui lòng nhập lại!";
-            err.style.display = "block";
-            document.getElementById("inputPass").value = "";
-            document.getElementById("inputPass").focus();
-        }
-    }
-
-    document.getElementById("inputPass").addEventListener("keyup", function(event) {
-        if (event.key === "Enter") checkPass();
-    });
-
+    // Bộ câu hỏi và đáp án
     const questions = [
         { id: 1, type: 'mcq', correct: 'A' },
         { id: 2, type: 'mcq', correct: 'A' },
@@ -137,189 +163,225 @@
     ];
 
     const userAnswers = {};
-    const container = document.getElementById('quizContainer');
-    let isSubmitted = false;
 
-    let timeLeft = 90 * 60;
-    const timerDisplay = document.getElementById('timer');
+    // 1. XÁC THỰC VÀO PHÒNG THI
+    function startApp() {
+        const name = document.getElementById("rawName").value.trim();
+        const className = document.getElementById("rawClass").value.trim();
+        const key = document.getElementById("rawKey").value;
+        const msg = document.getElementById("authMsg");
 
-    const countdown = setInterval(() => {
-        if (isSubmitted) {
-            clearInterval(countdown);
+        if (!name || !className) {
+            msg.innerText = "Bắt buộc điền Họ tên và Lớp!";
+            msg.style.display = "block";
             return;
         }
 
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
-        timerDisplay.innerHTML = `Thời gian còn lại: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-        if (timeLeft <= 0) {
-            clearInterval(countdown);
-            alert("Hết giờ làm bài! Hệ thống tự động thu bài.");
-            submitTest(false, "Hết giờ nộp bài");
+        if (key !== SECRET_KEY) {
+            msg.innerText = "Mật mã phòng thi không đúng!";
+            msg.style.display = "block";
+            document.getElementById("rawKey").value = "";
+            return;
         }
-        timeLeft--;
-    }, 1000);
 
-    questions.forEach(q => {
-        const div = document.createElement('div');
-        div.className = 'question';
-        div.id = `q-${q.id}`;
-        
-        if (q.type === 'mcq') {
-            div.innerHTML = `<strong>Câu ${q.id}:</strong> (MCQ)<br>`;
-            ['A', 'B', 'C', 'D'].forEach(opt => {
-                div.innerHTML += `<button class="option" onclick="selectAnswer(${q.id}, '${opt}', this)">${opt}</button>`;
-            });
-        } else if (q.type === 'tf_group') {
-            div.innerHTML = `<strong>Câu ${q.id}:</strong> (Đúng/Sai)<br>`;
-            ['a', 'b', 'c', 'd'].forEach(sub => {
-                const subDiv = document.createElement('div');
-                subDiv.className = 'tf-group';
-                subDiv.innerHTML = `Ý ${sub}: `;
-                ['Đúng', 'Sai'].forEach(label => {
-                    const val = (label === 'Đúng' ? 'true' : 'false');
-                    subDiv.innerHTML += `<button class="option" onclick="selectSubAnswer(${q.id}, '${sub}', '${val}', this)">${label}</button>`;
+        studentProfile.name = name;
+        studentProfile.class = className;
+
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainApp").style.display = "flex";
+        document.getElementById("userHeader").innerHTML = `Thí sinh: ${studentProfile.name} | Lớp: ${studentProfile.class}`;
+
+        isTestRunning = true;
+        renderQuiz();
+        startTimer();
+    }
+
+    // 2. TẠO GIAO DIỆN PHIẾU ĐÁP ÁN
+    function renderQuiz() {
+        const container = document.getElementById('quizContainer');
+        container.innerHTML = "";
+        questions.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'question';
+            div.id = `q-${q.id}`;
+            
+            if (q.type === 'mcq') {
+                div.innerHTML = `<strong>Câu ${q.id}:</strong><br>`;
+                ['A', 'B', 'C', 'D'].forEach(opt => {
+                    div.innerHTML += `<button type="button" class="option" onclick="chooseMcq(${q.id}, '${opt}', this)">${opt}</button>`;
                 });
-                div.appendChild(subDiv);
-            });
-        } else {
-            div.innerHTML = `<strong>Câu ${q.id}:</strong> (Ngắn)<br>`;
-            div.innerHTML += `<input type="text" oninput="saveText(${q.id}, this.value)" placeholder="Nhập đáp án...">`;
-        }
-        container.appendChild(div);
-    });
+            } else if (q.type === 'tf_group') {
+                div.innerHTML = `<strong>Câu ${q.id}:</strong> (Đúng/Sai)<br>`;
+                ['a', 'b', 'c', 'd'].forEach(sub => {
+                    const subDiv = document.createElement('div');
+                    subDiv.className = 'tf-group';
+                    subDiv.innerHTML = `Ý ${sub}: `;
+                    ['Đúng', 'Sai'].forEach(label => {
+                        const val = (label === 'Đúng' ? 'true' : 'false');
+                        subDiv.innerHTML += `<button type="button" class="option" onclick="chooseTf(${q.id}, '${sub}', '${val}', this)">${label}</button>`;
+                    });
+                    div.appendChild(subDiv);
+                });
+            } else {
+                div.innerHTML = `<strong>Câu ${q.id}:</strong> (Trả lời ngắn)<br>`;
+                div.innerHTML += `<input type="text" oninput="saveTextAns(${q.id}, this.value)" placeholder="Nhập đáp án...">`;
+            }
+            container.appendChild(div);
+        });
+    }
 
-    function selectAnswer(id, val, btn) {
-        if (isSubmitted) return;
+    function chooseMcq(id, val, btn) {
+        if (!isTestRunning || isSubmitted) return;
         userAnswers[id] = val;
         btn.parentElement.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     }
 
-    function selectSubAnswer(id, sub, val, btn) {
-        if (isSubmitted) return;
+    function chooseTf(id, sub, val, btn) {
+        if (!isTestRunning || isSubmitted) return;
         if (!userAnswers[id]) userAnswers[id] = {};
         userAnswers[id][sub] = val;
         btn.parentElement.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     }
 
-    function saveText(id, val) {
-        if (isSubmitted) return;
+    function saveTextAns(id, val) {
+        if (!isTestRunning || isSubmitted) return;
         userAnswers[id] = val.toLowerCase().trim();
     }
 
-    // isViolation = true: Khóa màn hình, xóa đáp án, không cho xem lại
-    async function submitTest(isViolation = false, note = "Nộp bài bình thường") {
+    // 3. ĐỒNG HỒ ĐẾM NGƯỢC
+    let timeLeft = 90 * 60;
+    let timerInterval = null;
+
+    function startTimer() {
+        const timerDisplay = document.getElementById('timer');
+        timerInterval = setInterval(() => {
+            if (isSubmitted) {
+                clearInterval(timerInterval);
+                return;
+            }
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            timerDisplay.innerHTML = `Thời gian còn lại: ${m}:${s < 10 ? '0' : ''}${s}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("Đã hết giờ làm bài!");
+                submitExam(false, "Hết giờ nộp bài");
+            }
+            timeLeft--;
+        }, 1000);
+    }
+
+    // 4. HÀM NỘP BÀI VÀ XỬ LÝ VI PHẠM
+    function submitExam(isDisqualified = false, note = "Nộp bài bình thường") {
         if (isSubmitted) return;
         isSubmitted = true;
-        clearInterval(countdown);
+        isTestRunning = false;
+        clearInterval(timerInterval);
 
         let totalScore = 0;
-        let logDetails = [];
+        let details = [];
 
         questions.forEach(q => {
-            const el = document.getElementById(`q-${q.id}`);
             let qScore = 0;
-
             if (q.type === 'mcq') {
-                const isCorrect = (userAnswers[q.id] === q.correct);
-                if (isCorrect) qScore = 0.25;
-                if (!isViolation) {
-                    el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
-                    el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
-                }
-            } 
-            else if (q.type === 'tf_group') {
-                let correctSubCount = 0;
+                if (userAnswers[q.id] === q.correct) qScore = 0.25;
+            } else if (q.type === 'tf_group') {
+                let rightSub = 0;
                 const userAns = userAnswers[q.id] || {};
                 ['a', 'b', 'c', 'd'].forEach(sub => {
-                    if (userAns[sub] === q.correct[sub]) correctSubCount++;
+                    if (userAns[sub] === q.correct[sub]) rightSub++;
                 });
-
-                if (correctSubCount === 1) qScore = 0.1;
-                else if (correctSubCount === 2) qScore = 0.25;
-                else if (correctSubCount === 3) qScore = 0.5;
-                else if (correctSubCount === 4) qScore = 1.0;
-
-                if (!isViolation) {
-                    el.classList.add(correctSubCount > 0 ? 'correct-answer' : 'wrong-answer');
-                    el.innerHTML += `<span class="feedback">Đúng ${correctSubCount}/4 ý (+${qScore})</span>`;
-                }
-            } 
-            else {
-                const isCorrect = (userAnswers[q.id] === q.correct);
-                if (isCorrect) qScore = 0.5;
-                if (!isViolation) {
-                    el.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
-                    el.innerHTML += `<span class="feedback">${isCorrect ? '✅' : '❌'} ĐA: ${q.correct} (+${qScore})</span>`;
-                }
+                if (rightSub === 1) qScore = 0.1;
+                else if (rightSub === 2) qScore = 0.25;
+                else if (rightSub === 3) qScore = 0.5;
+                else if (rightSub === 4) qScore = 1.0;
+            } else {
+                if (userAnswers[q.id] === q.correct) qScore = 0.5;
             }
-
             totalScore += qScore;
-            logDetails.push(`C${q.id}:${qScore}đ`);
-            if (el) el.querySelectorAll('button, input').forEach(i => i.disabled = true);
+            details.push(`C${q.id}:${qScore}đ`);
         });
 
         totalScore = Math.round(totalScore * 100) / 100;
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').style.background = "#ccc";
 
-        // Gửi kết quả về Google Sheets
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbzMaq-bBNkCHLM9iUjCVKdwnaJSzD8jXPnloKqdYnHySYOLWdNM0ru4FX47jYcQBefD/exec";
-        fetch(scriptUrl, {
+        // Gửi kết quả về Google Sheets bằng FormData
+        const fd = new FormData();
+        fd.append("Họ và Tên", studentProfile.name);
+        fd.append("Lớp", studentProfile.class);
+        fd.append("Điểm số", `Tổng: ${totalScore}/10 | ${note} | Rời tab: ${tabViolations} lần | Chi tiết: ${details.join('|')}`);
+
+        fetch(SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({ 
-                className: `${studentInfo.class} - ${studentInfo.name}`, 
-                results: `Tổng: ${totalScore}/10 | ${note} | Rời tab: ${tabSwitchCount} lần | Chi tiết: ${logDetails.join('|')}` 
-            })
+            body: fd
         });
 
-        // Xử lý giao diện khi bị vi phạm
-        if (isViolation) {
-            timerDisplay.innerHTML = "BÀI BỊ HỦY DO VI PHẠM";
+        const timerDisplay = document.getElementById('timer');
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.style.display = "none";
+
+        if (isDisqualified) {
+            // KHÓA VÀ XÓA GIAO DIỆN KHI VI PHẠM - KHÔNG HIỂN THỊ ĐÁP ÁN
+            document.getElementById("left").innerHTML = "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#c00;'><h2>ĐÃ ĐÓNG ĐỀ THI DO VI PHẠM</h2></div>";
+            document.getElementById("quizContainer").innerHTML = `
+                <div style="background:#ffebee; border:2px solid red; padding:20px; border-radius:8px; margin-top:20px; text-align:center;">
+                    <h3 style="color:#d32f2f; margin-top:0;">⛔ BÀI THI BỊ ĐÌNH CHỈ</h3>
+                    <p><b>Lý do:</b> Rời khỏi màn hình làm bài quá ${MAX_VIOLATIONS} lần quy định.</p>
+                    <p style="color:#333;">Dữ liệu vi phạm của thí sinh <b>${studentProfile.name}</b> đã được gửi về hệ thống quản lý.</p>
+                    <p style="color:#777; font-size:13px;">Hệ thống khóa toàn bộ đề thi và không cung cấp đáp án chi tiết.</p>
+                </div>`;
+            timerDisplay.innerHTML = "ĐÃ HỦY QUYỀN LÀM BÀI";
             timerDisplay.style.background = "#000";
-            // Xóa sạch nội dung đề PDF và cột đáp án để chống xem trộm
-            document.getElementById("left").innerHTML = "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#888;'><h3>ĐÃ KHÓA ĐỀ THI</h3></div>";
-            document.getElementById("quizContainer").innerHTML = "<h3 style='color:red;text-align:center;margin-top:40px;'>⚠️ Bài thi đã bị thu tự động do vi phạm quy chế chuyển tab quá 3 lần!<br><br>Hệ thống không hiển thị đáp án.</h3>";
-            document.getElementById("submitBtn").style.display = "none";
         } else {
-            timerDisplay.innerHTML = "BÀI ĐÃ NỘP";
+            // NỘP HỢP LỆ: Hiển thị đúng/sai
+            questions.forEach(q => {
+                const el = document.getElementById(`q-${q.id}`);
+                if (!el) return;
+                let isRight = false;
+                if (q.type === 'mcq' || q.type === 'text') {
+                    isRight = (userAnswers[q.id] === q.correct);
+                } else {
+                    let c = 0;
+                    ['a', 'b', 'c', 'd'].forEach(sub => {
+                        if ((userAnswers[q.id] || {})[sub] === q.correct[sub]) c++;
+                    });
+                    isRight = (c === 4);
+                }
+                el.classList.add(isRight ? 'correct-answer' : 'wrong-answer');
+                el.innerHTML += `<span class="feedback">${isRight ? '✅ Đúng' : '❌ Sai'} (ĐA: ${typeof q.correct === 'object' ? JSON.stringify(q.correct) : q.correct})</span>`;
+                el.querySelectorAll('button, input').forEach(i => i.disabled = true);
+            });
+            timerDisplay.innerHTML = "ĐÃ NỘP BÀI THÀNH CÔNG";
             timerDisplay.style.background = "#28a745";
-            alert(`Nộp bài thành công!\nĐiểm của bạn: ${totalScore}/10`);
+            alert(`Nộp bài thành công!\nTổng điểm: ${totalScore}/10`);
         }
     }
 
-    // --- THEO DÕI VI PHẠM RỜI TAB ---
-    let tabSwitchCount = 0;
-    const MAX_TAB_SWITCH = 3;
-    let wasLeft = false;
-
+    // 5. GIÁM SÁT CHUYỂN TAB VÀ TRỪNG PHẠT
     document.addEventListener("visibilitychange", function() {
-        const isAuthPassed = document.getElementById("authOverlay").style.display === "none";
-        if (!isAuthPassed || isSubmitted) return;
+        if (!isTestRunning || isSubmitted) return;
 
         if (document.hidden) {
-            wasLeft = true;
-        } else if (wasLeft) {
-            wasLeft = false;
-            tabSwitchCount++;
+            isTabAway = true;
+        } else if (isTabAway) {
+            isTabAway = false;
+            tabViolations++;
 
-            if (tabSwitchCount >= MAX_TAB_SWITCH) {
-                alert(`⚠️ VI PHẠM QUY CHẾ:\nBạn đã chuyển tab ${tabSwitchCount} lần!\nBài thi sẽ bị thu và KHÓA TOÀN BỘ ngay lập tức.`);
-                submitTest(true, `VI PHẠM chuyển tab ${tabSwitchCount} lần`);
+            if (tabViolations >= MAX_VIOLATIONS) {
+                alert(`⚠️ CẢNH BÁO VI PHẠM NGHIÊM TRỌNG:\nThí sinh ${studentProfile.name} đã rời trang thi lần thứ ${tabViolations}!\nBài thi lập tức bị đình chỉ và hủy kết quả hiển thị.`);
+                submitExam(true, `ĐÌNH CHỈ - Chuyển tab ${tabViolations} lần`);
             } else {
-                alert(`⚠️ CẢNH BÁO VI PHẠM (Lần ${tabSwitchCount}/${MAX_TAB_SWITCH}):\nKhông được rời khỏi màn hình làm bài! Vi phạm đủ 3 lần hệ thống sẽ tự động thu bài và không hiển thị đáp án.`);
+                alert(`⚠️ CẢNH BÁO QUY CHẾ (Lần ${tabViolations}/${MAX_VIOLATIONS}):\nKhông được phép chuyển tab hoặc thoát ứng dụng trong lúc làm bài!\nNếu vi phạm đủ ${MAX_VIOLATIONS} lần, bài thi sẽ lập tức bị khóa và không hiện đáp án.`);
             }
         }
     });
 
     window.addEventListener("blur", function() {
-        const isAuthPassed = document.getElementById("authOverlay").style.display === "none";
-        if (isAuthPassed && !isSubmitted) {
-            wasLeft = true;
+        if (isTestRunning && !isSubmitted) {
+            isTabAway = true;
         }
     });
 </script>
