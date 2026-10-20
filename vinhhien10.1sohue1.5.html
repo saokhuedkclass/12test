@@ -254,6 +254,26 @@
 
         alert(`Nộp bài thành công!\nTổng điểm của bạn: ${totalScore}/10`);
     }
+
+    // --- THEO DÕI VÀ CẢNH BÁO CHUYỂN TAB ---
+    let tabSwitchCount = 0;
+    const MAX_TAB_SWITCH = 3; // Giới hạn số lần chuyển tab (ví dụ: tối đa 3 lần)
+
+    document.addEventListener("visibilitychange", function() {
+        // Chỉ bắt đầu tính chuyển tab khi đã vào làm bài và chưa nộp bài
+        const isAuthPassed = document.getElementById("authOverlay").style.display === "none";
+        
+        if (isAuthPassed && !isSubmitted && document.hidden) {
+            tabSwitchCount++;
+            
+            if (tabSwitchCount >= MAX_TAB_SWITCH) {
+                alert(`⚠️ CẢNH BÁO VI PHẠM:\nBạn đã rời khỏi trang thi ${tabSwitchCount} lần! Hệ thống sẽ tự động thu bài.`);
+                autoSubmit();
+            } else {
+                alert(`⚠️ CẢNH BÁO:\nBạn không được chuyển sang tab khác trong khi làm bài!\nSố lần vi phạm: ${tabSwitchCount}/${MAX_TAB_SWITCH}`);
+            }
+        }
+    });
 </script>
 </body>
 </html>
