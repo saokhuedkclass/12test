@@ -132,7 +132,7 @@
         if (timeLeft <= 0) {
             clearInterval(countdown);
             alert("Hết giờ làm bài! Hệ thống đang tự động nộp bài.");
-            autoSubmit();
+            autoSubmit("Hết giờ - Tự động nộp");
         }
         timeLeft--;
     }, 1000);
@@ -186,9 +186,11 @@
         userAnswers[id] = val.toLowerCase().trim();
     }
 
-    function autoSubmit() {
+    function autoSubmit(reason = "Tự động nộp") {
         const classInput = document.getElementById('className');
-        if (!classInput.value) classInput.value = "Hết giờ - Tự động nộp";
+        if (!classInput.value.trim()) {
+            classInput.value = reason;
+        }
         submitTest();
     }
 
@@ -199,6 +201,7 @@
         if (!className) return alert("Vui lòng nhập tên lớp trước khi nộp bài!");
 
         isSubmitted = true;
+        clearInterval(countdown);
         let totalScore = 0;
         let logDetails = [];
 
@@ -249,29 +252,43 @@
         fetch(scriptUrl, {
             method: "POST",
             mode: "no-cors",
-            body: JSON.stringify({ className: className, results: `Tổng: ${totalScore}/10 - Chi tiết: ${logDetails.join('|')}` })
+            body: JSON.stringify({ 
+                className: className, 
+                results: `Tổng: ${totalScore}/10 - Chi tiết: ${logDetails.join('|')} - Rời tab: ${tabSwitchCount} lần` 
+            })
         });
 
         alert(`Nộp bài thành công!\nTổng điểm của bạn: ${totalScore}/10`);
     }
 
-    // --- THEO DÕI VÀ CẢNH BÁO CHUYỂN TAB ---
+    // --- THEO DÕI VÀ TỰ ĐỘNG THU BÀI KHI RỜI TAB 3 LẦN ---
     let tabSwitchCount = 0;
-    const MAX_TAB_SWITCH = 3; // Giới hạn số lần chuyển tab (ví dụ: tối đa 3 lần)
+    const MAX_TAB_SWITCH = 3;
+    let wasLeft = false;
 
     document.addEventListener("visibilitychange", function() {
-        // Chỉ bắt đầu tính chuyển tab khi đã vào làm bài và chưa nộp bài
         const isAuthPassed = document.getElementById("authOverlay").style.display === "none";
-        
-        if (isAuthPassed && !isSubmitted && document.hidden) {
+        if (!isAuthPassed || isSubmitted) return;
+
+        if (document.hidden) {
+            wasLeft = true;
+        } else if (wasLeft) {
+            wasLeft = false;
             tabSwitchCount++;
-            
+
             if (tabSwitchCount >= MAX_TAB_SWITCH) {
-                alert(`⚠️ CẢNH BÁO VI PHẠM:\nBạn đã rời khỏi trang thi ${tabSwitchCount} lần! Hệ thống sẽ tự động thu bài.`);
-                autoSubmit();
+                alert(`⚠️ VI PHẠM QUY CHẾ:\nBạn đã rời khỏi trang thi ${tabSwitchCount} lần! Hệ thống tự động khóa và thu bài thi ngay bây giờ.`);
+                autoSubmit(`Vi phạm rời tab ${tabSwitchCount} lần`);
             } else {
-                alert(`⚠️ CẢNH BÁO:\nBạn không được chuyển sang tab khác trong khi làm bài!\nSố lần vi phạm: ${tabSwitchCount}/${MAX_TAB_SWITCH}`);
+                alert(`⚠️ CẢNH BÁO VI PHẠM (Lần ${tabSwitchCount}/${MAX_TAB_SWITCH}):\nBạn không được phép chuyển tab hoặc thoát khỏi màn hình làm bài! Rời tab đủ 3 lần hệ thống sẽ tự động thu bài.`);
             }
+        }
+    });
+
+    window.addEventListener("blur", function() {
+        const isAuthPassed = document.getElementById("authOverlay").style.display === "none";
+        if (isAuthPassed && !isSubmitted) {
+            wasLeft = true;
         }
     });
 </script>
